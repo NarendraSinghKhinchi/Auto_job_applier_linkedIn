@@ -1,6 +1,6 @@
 # LinkedIn Job Application Tool
 
-**Disclaimer: This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you agree to comply with LinkedIn's terms of service and policies on web scraping. Use it at your own risk. The creators and contributors of this program are not responsible for any misuse, damages, or legal implications resulting from its usage.**
+**Disclaimer: This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you agree to comply with LinkedIn's terms of service and policies on web scraping. Use it at your own risk. The creators and contributors of this program are not responsible or liable for any misuse, damages, or legal implications resulting from its usage.**
 
 ## Introduction
 
@@ -21,6 +21,28 @@ Please note the following:
 ## Chrome Selenium Driver
 
 This program utilizes the Chrome Selenium driver for web scraping. Please review and comply with the terms and conditions specified by the Chrome Selenium driver.
+
+## A Heartfelt letter to you...
+My Dear Ladies and Gentle Men,
+
+Thank you for being a part of my job application tool! Your support means everything to me. 
+
+As you continue your job search, I hope this tool has provided you with valuable assistance and streamlined your efforts.
+
+Sharing is caring! If you found this tool helpful, consider sharing it with your peers and network. By doing so, you can empower others in their job hunt, just as you've been empowered.
+
+To continue improving and maintaining this tool, I rely on the support of users like you. If you believe in its mission and want to contribute, you can support me on <PATREON_LINK>. Every contribution, big or small, makes a significant impact!
+
+As an independent developer, I pour my heart and soul into creating tools like this, driven by the genuine desire to make a positive impact. Your support, whether through donations or simply spreading the word, means the world to me and helps keep this project alive and thriving.
+
+Thank you for being part of this journey, and remember that together, we can make a real difference in the lives of job seekers worldwide.
+
+With heartfelt appreciation,
+Sai Vignesh Golla
+
+You can connect and reach me out at:
+https://www.linkedin.com/in/saivigneshgolla/
+
 
 ## License
 
