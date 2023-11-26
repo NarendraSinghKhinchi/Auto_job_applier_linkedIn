@@ -1,3 +1,9 @@
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+'''
+
 from modules.open_chrome import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -58,7 +64,7 @@ def login_GPT():
     except Exception as e:
         print_lg("Seems like login attempt failed! Possibly due to wrong credentials or already logged in or Human verification! Try logging in manually!")
         # print_lg(e)
-        manual_login_retry(is_logged_in_GPT)
+        manual_login_retry(is_logged_in_GPT, 2)
 
 
 def open_resume_chat():

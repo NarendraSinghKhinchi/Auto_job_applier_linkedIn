@@ -1,9 +1,15 @@
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+'''
+
 import os
 import csv
 from time import sleep
 from random import randint
 from datetime import datetime, timedelta
-from setup.config import file_name, failed_file_name, log_path
+from setup.config import file_name, failed_file_name, logs_folder_path 
 
 # Function to search for Chrome Profiles
 def find_default_profile_directory():
@@ -64,12 +70,12 @@ def calculate_date_posted(time_string):
     
 
 # Failed job list update
-def failed_job(job_id, job_link, resume, date_listed, error, exception, application_link):
+def failed_job(job_id, job_link, resume, date_listed, error, exception, application_link, screenshot_name):
     with open(failed_file_name, 'a', newline='', encoding='utf-8') as file:
-        fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Predicted reason', 'Stack Trace', 'External Job link']
+        fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Assumed Reason', 'Stack Trace', 'External Job link', 'Screenshot Name']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         if file.tell() == 0: writer.writeheader()
-        writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Predicted reason':error, 'Stack Trace':exception,'External Job link':application_link})
+        writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
         file.close()
 
 
@@ -86,20 +92,18 @@ def get_applied_job_ids():
     return job_ids
 
 
-def manual_login_retry(is_logged_in):
+def manual_login_retry(is_logged_in, limit = 2):
     count = 0
     while not is_logged_in():
+        from pyautogui import alert
         print_lg("Seems like you're not logged in!")
-        message = "Press Enter to continue after you logged in..."
-        if count > 1:
-            message = "If you're seeing this message even after you logged in, type 'skip' and press Enter to continue or just press Enter to try again..."
+        button = "Confirm Login"
+        message = 'After you successfully Log In, please click "{}" button below.'.format(button)
+        if count > limit:
+            button = "Skip Confirmation"
+            message = 'If you\'re seeing this message even after you logged in, Click "{}". Seems like auto login confirmation failed!'.format(button)
         count += 1
-        try:
-            value = input(message).lower().strip()
-            if value == 'skip': return
-        except:
-            print_lg("  --> Only type 'skip' to skip. Try again!")
-
+        if alert(message, "Login Required", button) and count > limit: return
 
 def critical_error_log(possible_reason, stack_trace):
     print_lg(possible_reason, stack_trace, datetime.now())
@@ -108,8 +112,25 @@ def critical_error_log(possible_reason, stack_trace):
 def print_lg(*msgs):
     try:
         message = "\n".join(str(msg) for msg in msgs)
-        with open(log_path, 'a') as file:
+        path = logs_folder_path+"/log.txt"
+        with open(path.replace("//","/"), 'a', encoding="utf-8") as file:
             file.write(message + '\n')
         print(message)
     except Exception as e:
         critical_error_log("Log.txt is open or is occupied by another program!", e)
+
+def screenshot(driver, job_id, failedAt):
+    screenshot_name = "{} - {} - {}.png".format( job_id, failedAt, str(datetime.now()) )
+    path = logs_folder_path+"/screenshots/"+screenshot_name.replace(":",".")
+    # special_chars = {'*', '"', '\\', '<', '>', ':', '|', '?'}
+    # for char in special_chars:  path = path.replace(char, '-')
+    driver.save_screenshot(path.replace("//","/"))
+    return screenshot_name
+
+def make_directories(paths):
+    for path in paths:  
+        path = path.replace("//","/")
+        if '/' in path and '.' in path: path = path[:path.rfind('/')]
+        if not os.path.exists(path):   os.makedirs(path)
+
+

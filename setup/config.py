@@ -1,24 +1,33 @@
+
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+'''
+
 ###################################################### CONFIGURE YOUR TOOLS HERE ######################################################
 
 # >>>>>>>>>>> Global Settings <<<<<<<<<<<
 
-# Directory and name of the files where history of applied jobs is saved.
+# Directory and name of the files where history of applied jobs is saved (Sentence after the last "/" will be considered as the file name).
 file_name = "all excels/all_applied_applications_history.csv"
 failed_file_name = "all excels/all_failed_applications_history.csv"
-log_path = "all excels/log.txt"
+logs_folder_path = "logs/"
 
-# Set the maximum amount of time allowed to wait between each click
-click_gap = 0                   # Enter max allowed secs to wait approximately. (Only Non Negative Integers like 0,1,2,3,....)
+# Set the maximum amount of time allowed to wait between each click in secs
+click_gap = 1                   # Enter max allowed secs to wait approximately. (Only Non Negative Integers like 0,1,2,3,....)
 
 # If you want to see Chrome running then set run_in_background as False. May reduce performance...
 run_in_background = False       # True or False
 
-# If you want to keep your screen lit, set keep_screen_awake as True
-keep_screen_awake = True        # True or False
+# If enabled (True), the program would keep your screen active and prevent PC from sleeping. Instead you could disable this feature (set it to false) and adjust your PC sleep settings to Never Sleep or a preferred time. 
+keep_screen_awake = False        # True or False
 
-# Run in undetected mode to bypass anti-bot checks (This mode is Unstable, Recommended to leave it as False)
-undetected_mode = False
+# Run in undetected mode to bypass anti-bot protections (Preview Feature, unstable. Recommended to leave it as False)
+undetected_mode = False         # True or False
 
+# Use ChatGPT for resume building (Experimental Feature can break the application. Recommended to leave it as False) 
+use_resume_generator = False    # True or False ,   This feature may only work with 'undetected_mode' = True. As ChatGPT website is hosted by CloudFlare which is protected by Anti-bot protections!
 
 # ----------------------------------------------  AUTO APPLIER  ---------------------------------------------- #
 
@@ -29,7 +38,7 @@ password = "examplepassword"
 
 
 # These Sentences are Searched in LinkedIn
-keywords = ["Software Developer", "Software Engineer", "Junior Software Developer", "Junior Software Engineer", "React Developer", "Nodejs Developer", "Junior Full Stack Developer", "Grad Software Engineer", "Grad Software Developer"]
+keywords = ["Software Engineer III"] #"Software Developer", "Software Engineer", "Python Developer", "Junior Software Developer", "Junior Software Engineer", "React Developer", "Nodejs Developer", "Junior Full Stack Developer", "New Grad Software Developer", "New Grad Software Engineer"]
 
 
 
@@ -52,7 +61,7 @@ us_citizenship = "Non-citizen allowed to work for any employer" # If left empty 
 website = "https://github.com/GodsScion" # "www.example.bio" or "" and so on....
 
 # What is your desired salary, only enter in numbers
-desired_salary = "80000"        # "80000", "90000", "100000" or "120000" and so on....
+desired_salary = "90000"        # "80000", "90000", "100000" or "120000" and so on....
 
 # Example question: "On a scale of 1-10 how much experience do you have building web or mobile applications? 1 being very little or only in school, 10 being that you have built and launched applications to real users"
 confidence_level = "8"          # Any number between "1" to "10", put em in quotes ""
@@ -79,11 +88,18 @@ salary = ""                     # "$40,000+", "$60,000+", "$80,000+", "$100,000+
 
 easy_apply_only = True          # True or False
 
-experience_level = ["Internship", "Entry level"] # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
+experience_level = []           # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
 job_type = []                   # (multiple select) "Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship", "Other"
 on_site = []                    # (multiple select) "On-site", "Remote", "Hybrid"
 
-companies = []                  # (dynamic multiple select) "Dice", "JPMorgan Chase & Co.", "Tata Consultancy Services", "Recruiting from Scratch", "Epic", "Elevance Health", and so on... make sure the name you type in list exactly matches with the company name you're looking for, including capitals.
+companies = [
+"Google",
+"X, the moonshot factory",
+"YouTube",
+"CapitalG",
+"Adometry (acquired by Google)",
+"Mineral.ai"
+]                  # (dynamic multiple select) "JPMorgan Chase & Co.", "Tata Consultancy Services", "Recruiting from Scratch", "Epic", "Elevance Health", and so on... make sure the name you type in list exactly matches with the company name you're looking for, including capitals.
 location = []                   # (dynamic multiple select)
 industry = []                   # (dynamic multiple select)
 job_function = []               # (dynamic multiple select)
@@ -102,25 +118,29 @@ fair_chance_employer = False    # True or False
 # Avoid applying to companies with these words in their description...
 blacklist_words = ["Staffing", "Recruiting"] # (dynamic multiple select) or leave empty as []
 
-# Send connection requests to HR's
-connect_hr = True               # True or False
+# Avoid applying to jobs if their required experience is above your current_experience. (Set value as -1 if you want to apply to all ignoring their required experience...)
+current_experience = 3          # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
 
-# What message do you want to send during connection request? (Max. 300 Characters)
-connect_request_message = ""
+# Upcoming features
+# # Send connection requests to HR's
+# connect_hr = True               # True or False
+
+# # What message do you want to send during connection request? (Max. 200 Characters)
+# connect_request_message = ""    # Leave Empty to send connection request without personalized invitation (recommended to leave it empty, since you only get 10 per month without LinkedIn Premium*)
 
 # Keep the External Application tabs open?
-close_tabs = True               # True or False
+close_tabs = False              # True or False
 
 # After how many number of applications should we keep switching? 
-switch_number = 50             # Only numbers greater than 25... Don't put in quotes
+switch_number = 30              # Only numbers greater than 25... Don't put in quotes
 
 # Do you want the program to run continuously until you stop it?
-run_non_stop = True             # True or False
+run_non_stop = False             # True or False
 alternate_sortby = True         # True or False
 cycle_date_posted = True        # True or False
 stop_date_cycle_at_24hr = True  # True or False
 
-# ----------------------------------------------  RESUME GENERATOR  ---------------------------------------------- #
+# ----------------------------------------------  RESUME GENERATOR (Experimental)  ---------------------------------------------- #
 
 # Login Credentials for ChatGPT
 chatGPT_username = "username@example.com"
@@ -129,7 +149,7 @@ chatGPT_password = "examplepassword"
 chatGPT_resume_chat_title = "Resume review and feedback."
 
 # Give the path to the folder where all the generated resumes are to be stored
-generated_resume_path = "all resumes"
+generated_resume_path = "all resumes/"
 
 
 

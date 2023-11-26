@@ -1,16 +1,16 @@
 # LinkedIn Job Application Tool
 
-**Disclaimer: This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you agree to comply with LinkedIn's terms of service and policies on web scraping. Use it at your own risk. The creators and contributors of this program are not responsible or liable for any misuse, damages, or legal implications resulting from its usage.**
+**Disclaimer: This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you acknowledge and agree to abide by all the Terms, Conditions, Policies, and Licenses mentioned, which are subject to modification without prior notice. It is your responsibility to stay informed of any changes or updates. For the latest Terms & Conditions, Licenses, or Policies, please refer to [Auto Job Applier](https://github.com/GodsScion/Auto_job_applier_linkedIn). Additionally, kindly adhere to and comply with LinkedIn's terms of service and policies pertaining to web scraping. Usage is at your own risk. The creators and contributors of this program emphasize that they bear no responsibility or liability for any misuse, damages, or legal consequences resulting from its usage.**
 
 ## Introduction
 
-This is a web scraping tool that automates the process of job applications on LinkedIn. It collects job listings information such as job titles, companies, and URLs from LinkedIn job search results. 
+This is a web scraping tool that automates the process of job applications on LinkedIn. It collects job listings information such as job titles, companies, URLs etc. from LinkedIn job search results. 
 
-## Usage
+## Usage Policies
 
-Please note the following:
+Please consider the following:
 
-- **LinkedIn Policies**: LinkedIn has specific policies regarding web scraping and data collection. It is your responsibility to review and comply with these policies before using, interacting, or performing any actions with this program. Be aware of the limitations and restrictions imposed by LinkedIn to avoid any potential violation.
+- **LinkedIn Policies**: LinkedIn has specific policies regarding web scraping and data collection. It is your responsibility to review and comply with these policies before engaging, interacting, or undertaking any actions with this program. Be aware of the limitations and restrictions imposed by LinkedIn to avoid any potential violation.
 
 - **No Warranties or Guarantees**: This program is provided as-is, without any warranties or guarantees of any kind. The accuracy, reliability, and effectiveness of the program cannot be guaranteed. Use it at your own risk.
 
@@ -25,7 +25,7 @@ This program utilizes the Chrome Selenium driver for web scraping. Please review
 ## A Heartfelt letter to you...
 My Dear Ladies and Gentle Men,
 
-Thank you for being a part of my job application tool! Your support means everything to me. 
+Thank you for using the job application tool! Your support means everything to me. 
 
 As you continue your job search, I hope this tool has provided you with valuable assistance and streamlined your efforts.
 

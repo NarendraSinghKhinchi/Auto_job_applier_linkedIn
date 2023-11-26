@@ -1,3 +1,9 @@
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+'''
+
 from setup.config import run_in_background, undetected_mode
 if undetected_mode:
     import undetected_chromedriver as uc
@@ -21,6 +27,5 @@ try:
     actions = ActionChains(driver)
 except Exception as e:
     print_lg("Seems like Google Chrome browser is already running or Chrome-driver is out dated. Close Chrome and run setup.sh or update the Chrome-driver and then run this program.")
-    from datetime import datetime
     critical_error_log("In Opening Chrome", e)
     exit(1)

@@ -1,3 +1,9 @@
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+'''
+
 from setup.config import click_gap
 from modules.helpers import buffer, print_lg
 from selenium.webdriver.common.by import By
@@ -6,11 +12,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 # Click Functions
-def wait_span_click(driver, x, time=5.0, click=True):
+def wait_span_click(driver, x, time=5.0, click=True, scroll=True):
     if x:
         try:
             button = WebDriverWait(driver,time).until(EC.presence_of_element_located((By.XPATH, '//span[normalize-space(.)="'+x+'"]')))
-            scroll_to_view(driver, button)
+            if scroll:  scroll_to_view(driver, button)
             if click:
                 button.click()
                 buffer(click_gap)
@@ -31,7 +37,7 @@ def multi_sel(driver, l, time=5.0):
             print_lg("Click Failed! Didn't find '"+x+"'")
             # print_lg(e)
 
-def multi_sel_noWait(driver, l):
+def multi_sel_noWait(driver, l, actions=False):
     for x in l:
         try:
             button = driver.find_element(By.XPATH, '//span[normalize-space(.)="'+x+'"]')
@@ -40,6 +46,7 @@ def multi_sel_noWait(driver, l):
             buffer(click_gap)
         except Exception as e:
             print_lg("Click Failed! Didn't find '"+x+"'")
+            if actions: company_search_click(driver,actions,x)
             # print_lg(e)
 
 def boolean_button_click(driver, actions, x):
@@ -67,8 +74,31 @@ def text_input_by_ID(driver, id, value, time=5.0):
     username_field.send_keys(Keys.CONTROL + "a")
     return username_field.send_keys(value)
 
-def try_xp(driver, xpath):
+def try_xp(driver, xpath, click=True):
     try: 
-        driver.find_element(By.XPATH, xpath).click()
-        return True
+        if click:
+            driver.find_element(By.XPATH, xpath).click()
+            return True
+        else:
+            return driver.find_element(By.XPATH, xpath).click()
     except: return False
+
+def try_linkText(driver, linkText):
+    try:    return driver.find_element(By.LINK_TEXT, linkText)
+    except:  return False
+
+def try_find_by_classes(driver, classes):
+    for cla in classes:
+        try:    return driver.find_element(By.CLASS_NAME, cla)
+        except: pass
+    raise Exception("Failed to find an element with given classes")
+
+def company_search_click(driver,actions,x):
+    wait_span_click(driver,"Add a company",1)
+    search = driver.find_element(By.XPATH,"(//input[@placeholder='Add a company'])[1]")
+    search.send_keys(Keys.CONTROL + "a")
+    search.send_keys(x)
+    buffer(3)
+    actions.send_keys(Keys.DOWN).perform()
+    actions.send_keys(Keys.ENTER).perform()
+    print_lg(f'Tried searching and adding "{x}"')
