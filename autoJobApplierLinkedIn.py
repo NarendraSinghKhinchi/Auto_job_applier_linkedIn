@@ -9,14 +9,14 @@ LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
 import os
 import csv
 import re
-from pyautogui import press, alert
+from pyautogui import press, alert, confirm
 from datetime import datetime
 from modules.open_chrome import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException
 from setup.config import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
@@ -124,7 +124,7 @@ def apply_filters():
 # Get Job Main details
 def get_job_main_details(job):
     job_details_button = job.find_element(By.CLASS_NAME, "job-card-list__title")
-    scroll_to_view(driver, job_details_button)
+    scroll_to_view(driver, job_details_button, True)
     title = job_details_button.text
     company = job.find_element(By.CLASS_NAME, "job-card-container__primary-description").text
     job_id = job.get_dom_attribute('data-occludable-job-id')
@@ -143,13 +143,14 @@ def get_job_main_details(job):
 
 # Check for Blacklisted words in About Company
 def check_blacklist(rejected_jobs,job_id):
-    about_company = find_by_class(driver, "jobs-company__box")
-    scroll_to_view(driver, about_company)
-    about_company = about_company.text.lower()
+    about_company_org = find_by_class(driver, "jobs-company__box")
+    scroll_to_view(driver, about_company_org)
+    about_company_org = about_company_org.text
+    about_company = about_company_org.lower()
     for word in blacklist_words: 
         if word.lower() in about_company: 
             rejected_jobs.add(job_id)
-            raise ValueError(f'Found the word "{word}" in \n"{about_company}"')
+            raise ValueError(f'Found the word "{word}" in \n"{about_company_org}"')
     buffer(1)
     scroll_to_view(driver, find_by_class(driver, "jobs-unified-top-card"))
     return rejected_jobs
@@ -175,11 +176,16 @@ def answer_questions(questions_list):
         answer = 'Yes'
         label = label_org.lower()
         if 'gender' in label or 'sex' in label: answer = gender
+        if 'disability' in label: answer = disability_status
         select = Select(select)
         selected_option = select.first_selected_option.text
         if selected_option != "Select an option": continue
-        select.select_by_visible_text(answer)
-        questions_list.add((label_org, select.first_selected_option.text, "select")) 
+        try:
+            select.select_by_visible_text(answer)
+        except NoSuchElementException as e:
+            print_lg(f'Failed to find an option with text "{answer}" for question labelled "{label_org}", answering randomly!')
+        questions_list.add((label_org, select.first_selected_option.text, "select")) # <<<<<<<<<<<<<<<<<<
+
 
     # Find all radio questions
     all_radio_questions = driver.find_elements(By.XPATH, '//fieldset[@data-test-form-builder-radio-button-form-component="true"]')
@@ -261,13 +267,13 @@ def apply_to_jobs(keywords):
                 # Wait until job listings are loaded
                 wait.until(EC.presence_of_all_elements_located((By.XPATH, "//li[contains(@class, 'jobs-search-results__list-item')]")))
 
-                # try:
-                pagination_element = find_by_class(driver, "artdeco-pagination")
-                scroll_to_view(driver, pagination_element)
-                current_page = int(pagination_element.find_element(By.XPATH, "//li[contains(@class, 'active')]").text)
-                # except Exception as e:
-                #     print_lg("Failed to find Pagination element, hence couldn't scroll till end!")
-                #     # print_lg(e)
+                try:
+                    pagination_element = find_by_class(driver, "artdeco-pagination")
+                    scroll_to_view(driver, pagination_element)
+                    current_page = int(pagination_element.find_element(By.XPATH, "//li[contains(@class, 'active')]").text)
+                except Exception as e:
+                    print_lg("Failed to find Pagination element, hence couldn't scroll till end!")
+                    # print_lg(e)
 
 
                 # Find all job listings in current page
@@ -283,7 +289,9 @@ def apply_to_jobs(keywords):
                     job_id,title,company,work_location,work_style = get_job_main_details(job)
                     
                     # Skip if previously rejected due to blacklist or already applied
-                    if job_id in rejected_jobs: continue
+                    if job_id in rejected_jobs: 
+                        print_lg(f'Skipping previously rejected "{title} | {company}" job. Job ID: {job_id}!')
+                        continue
                     try:
                         if job_id in applied_jobs or find_by_class(driver, "jobs-s-apply__application-link", 2):
                             print_lg(f'Already applied to "{title} | {company}" job. Job ID: {job_id}!')
@@ -360,13 +368,16 @@ def apply_to_jobs(keywords):
                     # Get job description
                     try:
                         description = find_by_class(driver, "jobs-box__html-content").text
-                        experience_required = extract_years_of_experience(description)
-                        if current_experience > -1 and experience_required > current_experience:
-                            message = f'Experience required {experience_required} > Current Experience {current_experience}\n{description}'
-                            print_lg('Skipping this job.', message)
-                            failed_job(job_id, job_link, resume, date_listed, "Required experience is high", message, "Skipped", screenshot_name)
-                            rejected_jobs.add(job_id)
-                            continue
+                        if did_masters and current_experience >= 2 and 'master' in description.lower():
+                            print_lg(f'Skipped checking for minimum years of experience required cause found the word "master" in \n{description}')
+                        else:
+                            experience_required = extract_years_of_experience(description)
+                            if current_experience > -1 and experience_required > current_experience:
+                                message = f'Experience required {experience_required} > Current Experience {current_experience}\n{description}'
+                                print_lg('Skipping this job.', message)
+                                failed_job(job_id, job_link, resume, date_listed, "Required experience is high", message, "Skipped", screenshot_name)
+                                rejected_jobs.add(job_id)
+                                continue
                     except Exception as e:
                         if description == "Unknown":    print_lg("Unable to extract job description!")
                         else:
@@ -378,6 +389,7 @@ def apply_to_jobs(keywords):
                     if wait_span_click(driver, "Easy Apply", 2):
                         try: 
                             try:
+                                errored = ""
                                 wait_span_click(driver, "Next", 1)
                                 resume = default_resume_path
                                 # if description != "Unknown":
@@ -390,25 +402,40 @@ def apply_to_jobs(keywords):
                                 next_counter = 0
                                 while next_button:
                                     next_counter += 1
-                                    if next_counter >= 12: 
+                                    if next_counter >= 6: 
+                                        if pause_at_failed_question:
+                                            alert("Couldn't answer one or more questions.\nPlease click \"Continue\" once done.\nDO NOT CLICK Next or Review button in LinkedIn.\n\n\n\n\nYou can turn off \"Pause at failed question\" setting in config.py", "Help Needed", "Continue")
+                                            next_counter = 1
+                                            continue
                                         if questions_list: print_lg("Stuck for one or some of the following questions...", questions_list)
                                         screenshot_name = screenshot(driver, job_id, "Failed at questions")
+                                        errored = "stuck"
                                         raise Exception("Seems like stuck in a continuous loop of next, probably because of new questions.")
                                     questions_list = answer_questions(questions_list)
                                     next_button = driver.find_element(By.XPATH, '//button[contains(span, "Next")]')
                                     try: next_button.click()
-                                    except ElementClickInterceptedException: break
+                                    except ElementClickInterceptedException:    break   # Happens when it tries to click Next button in About Company photos section
                                     buffer(click_gap)
 
                             except NoSuchElementException:
                                 if questions_list: print_lg("Answered the following questions...", questions_list)
+                                errored = "nose"
                             finally:
                                 wait_span_click(driver, "Review", 2)
+                                if errored != "stuck" and pause_before_submit: alert('1. Please verify your information.\n2. If you edited something, please return to this final screen.\n3. DO NOT CLICK "Submit Application".\n\n\n\n\nYou can turn off "Pause before submit" setting in config.py',"Paused")
                                 if wait_span_click(driver, "Submit application", 2): 
                                     date_applied = datetime.now()
                                     if not wait_span_click(driver, "Done", 2): actions.send_keys(Keys.ESCAPE).perform()
+                                elif errored != "stuck" and pause_before_submit and "Yes" in confirm("You submitted the application, didn't you 😒?", "Failed to find Submit Application!", ["Yes", "No"]):
+                                    date_applied = datetime.now()
+                                    wait_span_click(driver, "Done", 2)
                                 else:
                                     print_lg("Since, Submit Application failed, discarding the job application...")
+                                    if screenshot_name == "Not Available":  screenshot_name = screenshot(driver, job_id, "Failed to click Submit application")
+                                    else:   screenshot_name = [screenshot_name, screenshot(driver, job_id, "Failed to click Submit application")]
+                                    if errored == "nose": raise Exception("Failed to click Submit application 😑")
+
+
                         except Exception as e:
                             print_lg("Failed to Easy apply!")
                             # print_lg(e)
@@ -525,11 +552,29 @@ def main():
             total_runs = run(total_runs)
         
 
+    except NoSuchWindowException:   pass
     except Exception as e:
         critical_error_log("In Applier Main", e)
         alert(e,alert_title)
     finally:
-        print_lg("Closing the browser...")
+        import random
+        quote = random.choice([
+            "You're one step closer than before.", 
+            "All the best with your future interviews.", 
+            "Keep up with the progress. You got this.", 
+            "If you're tired, learn to take rest but never give up.",
+            "Success is not final, failure is not fatal: It is the courage to continue that counts. - Winston Churchill",
+            "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle. - Christian D. Larson",
+            "Every job is a self-portrait of the person who does it. Autograph your work with excellence.",
+            "The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. - Steve Jobs",
+            "Opportunities don't happen, you create them. - Chris Grosser",
+            "The road to success and the road to failure are almost exactly the same. The difference is perseverance.",
+            "Obstacles are those frightful things you see when you take your eyes off your goal. - Henry Ford",
+            "The only limit to our realization of tomorrow will be our doubts of today. - Franklin D. Roosevelt"
+            ])
+        msg = f"{quote}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/"
+        alert(msg, "Exiting..")
+        print_lg(msg,"Closing the browser...")
         driver.quit()
 
 main()
