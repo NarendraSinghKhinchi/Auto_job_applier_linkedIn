@@ -31,13 +31,14 @@ def validate_config():
     if not isinstance(click_gap, int) and click_gap >= 0: raise Exception(f'Invalid input for click_gap. Expecting an int greater than or equal to 0, NOT "{click_gap}"!')
 
     validate_TorF(run_in_background, "run_in_background")
+    validate_TorF(smooth_scroll, "smooth_scroll")
 
     validate_TorF(close_tabs, "close_tabs")
 
     validate_String(username, "username")
     validate_String(password, "password")
 
-    validate_Multi(keywords, "keywords")
+    validate_Multi(search_terms, "search_terms")
 
     validate_String(sort_by, "sort_by", ["", "Most recent", "Most relevant"])
     validate_String(date_posted, "date_posted", ["", "Any time", "Past week", "Past 24 hours", "Past month"])

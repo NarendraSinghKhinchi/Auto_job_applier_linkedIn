@@ -20,6 +20,9 @@ click_gap = 0                   # Enter max allowed secs to wait approximately. 
 # If you want to see Chrome running then set run_in_background as False. May reduce performance...
 run_in_background = False       # True or False
 
+# Do you want scrolling to be smooth or instantaneous? (Can reduce performance if True)
+smooth_scroll = False            # True or False
+
 # If enabled (True), the program would keep your screen active and prevent PC from sleeping. Instead you could disable this feature (set it to false) and adjust your PC sleep settings to Never Sleep or a preferred time. 
 keep_screen_awake = False        # True or False
 
@@ -38,8 +41,9 @@ username = "username@example.com"
 password = "examplepassword"
 
 # These Sentences are Searched in LinkedIn
-keywords = ["Software Engineer", "Software Developer", "Python Developer", "Junior Software Developer"] #, "Junior Software Engineer", "React Developer", "Nodejs Developer", "Junior Full Stack Developer", "New Grad Software Developer", "New Grad Software Engineer"]
-
+search_terms = ["Software Engineer", "Software Developer", "Python Developer", "Java Developer", "Junior Software Developer", "Junior Software Engineer", "React Developer", "Nodejs Developer", "Junior Full Stack Developer", "New Grad Software Developer", "New Grad Software Engineer"]
+# Do you want to randomize the search order for search_terms?
+randomize_search_order = True   # True of False
 
 
 # >>>>>>>>>>> Easy Apply Questions & Inputs <<<<<<<<<<<
@@ -69,6 +73,11 @@ confidence_level = "8"          # Any number between "1" to "10", put em in quot
 # How do you identify yourself? If left empty as "", tool will not answer the question. However, note that some companies make compulsory to be answered
 gender = "Male"                 # "Male", "Female", "Other", "Decline" or ""
 disability_status = "Decline"          # 
+
+current_city = ""
+
+desired_location = ""
+
 full_name = "Sai Vignesh Golla" # Your name in quotes
 
 
@@ -82,7 +91,7 @@ String_Preferences = ""
 Multiple_Select = []
 '''
 
-sort_by = "Most relevant"       # "Most recent", "Most relevant" or ("" to not select) 
+sort_by = "Most recent"       # "Most recent", "Most relevant" or ("" to not select) 
 date_posted = "Any time"        # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select)
 salary = ""                     # "$40,000+", "$60,000+", "$80,000+", "$100,000+", "$120,000+", "$140,000+", "$160,000+", "$180,000+", "$200,000+"
 
@@ -93,8 +102,8 @@ job_type = []                   # (multiple select) "Full-time", "Part-time", "C
 on_site = []                    # (multiple select) "On-site", "Remote", "Hybrid"
 
 companies = [
-#     "7-eleven", "Google","X, the moonshot factory","YouTube","CapitalG","Adometry (acquired by Google)",
-#     "Mineral.ai","Microsoft","JP Morgan","Barclays","Visa","American Express"
+#     "7-eleven", "Google","X, the moonshot factory","YouTube","CapitalG","Adometry (acquired by Google)","Meta",
+#     "Mineral.ai","Microsoft","JP Morgan","Barclays","Visa","American Express", "Snap Inc",
 ]                  # (dynamic multiple select) "JPMorgan Chase & Co.", "Tata Consultancy Services", "Recruiting from Scratch", "Epic", "Elevance Health", and so on... make sure the name you type in list exactly matches with the company name you're looking for, including capitals.
 location = []                   # (dynamic multiple select)
 industry = []                   # (dynamic multiple select)
@@ -115,15 +124,18 @@ fair_chance_employer = False    # True or False
 blacklist_words = ["Staffing", "Recruiting"] # (dynamic multiple select) or leave empty as []
 
 # Avoid applying to jobs if their required experience is above your current_experience. (Set value as -1 if you want to apply to all ignoring their required experience...)
-current_experience = 3          # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
+current_experience = -1          # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
 
 # Do you have a Masters degree in the field you're applying to? If yes and your current_experience is >= 2. The tool will apply to jobs containing the word 'master' in it's description regardless of experience required. (Usually most companies if mentioned say 4+ years OR Masters degree and 2+ years of experience)
 did_masters = True              # True or False
 
 ## Allow Manual Inputs
 # Should the tool pause before every submit application during easy apply to let you check the information?
-pause_before_submit = True     # True or False
-pause_at_failed_question = True # True or False
+pause_before_submit = False     # True or False
+
+# Should the tool pause if it needs help in answering questions during easy apply?
+pause_at_failed_question = False # True or False
+##
 
 # Keep the External Application tabs open?
 close_tabs = False              # True or False
@@ -131,19 +143,20 @@ close_tabs = False              # True or False
 # After how many number of applications should we keep switching? 
 switch_number = 30              # Only numbers greater than 25... Don't put in quotes
 
-# Upcoming features
-# # Send connection requests to HR's
-# connect_hr = True               # True or False
+## Upcoming features (In Development)
+# Send connection requests to HR's
+connect_hr = True               # True or False
 
-# # What message do you want to send during connection request? (Max. 200 Characters)
-# connect_request_message = ""    # Leave Empty to send connection request without personalized invitation (recommended to leave it empty, since you only get 10 per month without LinkedIn Premium*)
-
+# What message do you want to send during connection request? (Max. 200 Characters)
+connect_request_message = ""    # Leave Empty to send connection request without personalized invitation (recommended to leave it empty, since you only get 10 per month without LinkedIn Premium*)
 
 # Do you want the program to run continuously until you stop it?
 run_non_stop = False             # True or False
 alternate_sortby = True         # True or False
 cycle_date_posted = True        # True or False
 stop_date_cycle_at_24hr = True  # True or False
+##
+
 
 # ----------------------------------------------  RESUME GENERATOR (Experimental)  ---------------------------------------------- #
 
