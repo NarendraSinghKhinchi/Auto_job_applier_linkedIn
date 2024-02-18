@@ -2,6 +2,13 @@
 Author:     Sai Vignesh Golla
 LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
 
+Copyright (C) 2024 Sai Vignesh Golla
+
+License:    GNU Affero General Public License
+            https://www.gnu.org/licenses/agpl-3.0.en.html
+            
+GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
+
 '''
 
 from setup.config import click_gap, smooth_scroll
@@ -66,9 +73,9 @@ def find_by_class(driver, class_name, time=5.0):
 
 # Scroll functions
 def scroll_to_view(driver, element, top = False, smooth_scroll = smooth_scroll):
+    if top: return driver.execute_script('arguments[0].scrollIntoView();', element)
     behavior = "smooth" if smooth_scroll else "instant"
-    top = "start" if top else "center"
-    return driver.execute_script('arguments[0].scrollIntoView({block: "'+top+'", behavior: "'+behavior+'"});', element)
+    return driver.execute_script('arguments[0].scrollIntoView({block: "center", behavior: "'+behavior+'" });', element)
 
 # Enter input text functions
 def text_input_by_ID(driver, id, value, time=5.0):
