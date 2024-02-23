@@ -1,10 +1,10 @@
-# LinkedIn Job Application Tool
+# LinkedIn Auto Job Applier
+This is an web scraping bot that automates the process of job applications on LinkedIn. It customizes your resume based on the collected job information, such as skills required, description, about company, etc. Answers all questions and applies to the job. 
 
-**Disclaimer: This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you acknowledge and agree to abide by all the Terms, Conditions, Policies, and Licenses mentioned, which are subject to modification without prior notice. It is your responsibility to stay informed of any changes or updates. For the latest Terms & Conditions, Licenses, or Policies, please refer to [Auto Job Applier](https://github.com/GodsScion/Auto_job_applier_linkedIn). Additionally, kindly adhere to and comply with LinkedIn's terms of service and policies pertaining to web scraping. Usage is at your own risk. The creators and contributors of this program emphasize that they bear no responsibility or liability for any misuse, damages, or legal consequences resulting from its usage.**
+## See it in Action
+[![Auto Job Applier demo video](https://github.com/GodsScion/Auto_job_applier_linkedIn/assets/100998531/429f7753-ebb0-499b-bc5e-5b4ee28c4f69)](https://youtu.be/vhK5Iv9iSQQ)
+Click on above image to watch the demo or use this link https://youtu.be/vhK5Iv9iSQQ
 
-## Introduction
-
-This is a web scraping tool that automates the process of job applications on LinkedIn. It collects job listings information such as job titles, companies, URLs etc. from LinkedIn job search results. 
 
 ## Feature List (I'm yet to complete the documentation, I'm adding in more features)
 
@@ -22,6 +22,7 @@ This is a web scraping tool that automates the process of job applications on Li
 - Collects experience required and skips if not applicable to you, must be configured
 - Auto Filters jobs based on your experience and black list key words
 - Skips blacklisted jobs
+- Can be configured to skip jobs requiring Security Clearance
 - You can add exceptions to blacklist key words
 - Only applies to filtered jobs
 - Auto selects next pages until it hits the quota you configured
@@ -61,12 +62,16 @@ This is a web scraping tool that automates the process of job applications on Li
 
 ## How to install
 * [Python 3](https://www.python.org/) or above. Visit https://www.python.org/downloads/ to download and install Python, or for windows you could visit Microsoft Store and search for "Python".
-* Install necessary [Undetected Chromedriver](https://pypi.org/project/undetected-chromedriver/), [PyAutoGUI](https://pypi.org/project/PyAutoGUI/) and [Setuptools](https://pypi.org/project/setuptools/) packages. After Python is installed, in a console or shell, use the [pip](https://pip.pypa.io/en/stable) command-line tool to install these 3 package. Please make sure Python is added to Path in System Environement Variables.
+* Install necessary [Undetected Chromedriver](https://pypi.org/project/undetected-chromedriver/), [PyAutoGUI](https://pypi.org/project/PyAutoGUI/) and [Setuptools](https://pypi.org/project/setuptools/) packages. After Python is installed, in a console or shell, use the [pip](https://pip.pypa.io/en/stable) command-line tool to install these 3 package. Please make sure Python is added to Path in System Environment Variables.
   ```
   pip install undetected-chromedriver pyautogui setuptools
   ```
-* Download and install latest version of [Googe Chrome](https://www.google.com/chrome) in it's default location, visit https://www.google.com/chrome to download it's installer.
-* Download and install the appropriate Chrome Driver for Google Chrome and add it to path System Environment variables.
+* Download and install latest version of [Google Chrome](https://www.google.com/chrome) in it's default location, visit https://www.google.com/chrome to download it's installer.
+* Download and install the appropriate [Chrome Driver](https://googlechromelabs.github.io/chrome-for-testing/) for Google Chrome and add it to path System Environment variables, visit https://googlechromelabs.github.io/chrome-for-testing/ to download.
+
+## Disclaimer
+
+**This program is for educational purposes only. By downloading, using, copying, replicating, or interacting with this program or its code, you acknowledge and agree to abide by all the Terms, Conditions, Policies, and Licenses mentioned, which are subject to modification without prior notice. It is your responsibility to stay informed of any changes or updates. For the latest Terms & Conditions, Licenses, or Policies, please refer to [Auto Job Applier](https://github.com/GodsScion/Auto_job_applier_linkedIn). Additionally, kindly adhere to and comply with LinkedIn's terms of service and policies pertaining to web scraping. Usage is at your own risk. The creators and contributors of this program emphasize that they bear no responsibility or liability for any misuse, damages, or legal consequences resulting from its usage.**
 
 ## Terms and Conditions
 
@@ -80,9 +85,9 @@ Please consider the following:
 
 - **Use at Your Own Risk**: It is important to exercise caution and ensure that your usage, interactions, and actions with this program comply with the applicable laws and regulations. Understand the potential risks and consequences associated with web scraping and data collection activities.
 
-## Chrome Selenium Driver
+### Chrome Driver
 
-This program utilizes the Chrome Selenium driver for web scraping. Please review and comply with the terms and conditions specified by the Chrome Selenium driver.
+This program utilizes the Chrome Driver for web scraping. Please review and comply with the terms and conditions specified for [Chrome Driver](https://chromedriver.chromium.org/home).
 
 ## A Heartfelt letter to you...
 My Dear Ladies and Gentle Men,

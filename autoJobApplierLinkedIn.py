@@ -221,11 +221,10 @@ def extract_years_of_experience(text):
 
 
 
-# Function to answer the questions for Easy Apply
+# Function to answer common questions for Easy Apply
 def answer_common_questions(label, answer):
     if ('hear' in label or 'come across' in label) and 'this' in label and ('job' in label or 'position' in label): answer = "LinkedIn"
     return answer
-
 
 
 # Function to answer the questions for Easy Apply
@@ -479,8 +478,33 @@ def apply_to_jobs(search_terms):
                     # Get job description
                     try:
                         description = find_by_class(driver, "jobs-box__html-content").text
-                        if did_masters and current_experience >= 2 and 'master' in description.lower():
+                        descriptionLow = description.lower()
+##>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                        # import re
+
+                        # # Pre-compile regular expressions outside the function only once, pre compling once increase performance instead of compiling everytime the function is called!
+                        # pattern1 = re.compile(r'security clearance|polygraph|secret clearance') 
+
+                        # def skip_job(description, security_clearance):
+                        #     # Use find() method for substring search
+                        #     if not security_clearance and pattern1.search(description.lower()):
+                        #         print(f'Skipping this job. Found "Security Clearance" or "Polygraph" in:\n{description}')
+                        #         return True
+                        #     return False
+
+                        # # Example usage
+                        # description = "We are hiring for a position that requires a Top Secret security clearance."
+                        # security_clearance = False
+                        # skip_job(description, security_clearance)
+
+                        if security_clearance == False and ('polygraph' in descriptionLow or 'security clearance' in descriptionLow or 'secret clearance' in descriptionLow):
+                            print_lg(f'Skipping this job. Found "Security Clearence" or "Polygraph" in \n{description}')
+                            experience_required = "Skipped checking (Polygraph)"
+
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                        if did_masters and current_experience >= 2 and 'master' in descriptionLow:
                             print_lg(f'Skipped checking for minimum years of experience required cause found the word "master" in \n{description}')
+                            experience_required = "Skipped checking (Masters)"
                         else:
                             experience_required = extract_years_of_experience(description)
                             if current_experience > -1 and experience_required > current_experience:
@@ -679,6 +703,7 @@ def main():
         msg = f"{quote}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/"
         pyautogui.alert(msg, "Exiting..")
         print_lg(msg,"Closing the browser...")
-        driver.quit()
+        try: driver.quit()
+        except Exception as e: critical_error_log("When quitting...", e)
 
 main()
