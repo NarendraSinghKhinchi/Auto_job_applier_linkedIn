@@ -2,11 +2,11 @@
 This is an web scraping bot that automates the process of job applications on LinkedIn. It customizes your resume based on the collected job information, such as skills required, description, about company, etc. Answers all questions and applies to the job. 
 
 ## See it in Action
-[![Auto Job Applier demo video](https://github.com/GodsScion/Auto_job_applier_linkedIn/assets/100998531/429f7753-ebb0-499b-bc5e-5b4ee28c4f69)](https://youtu.be/vhK5Iv9iSQQ)
-Click on above image to watch the demo or use this link https://youtu.be/vhK5Iv9iSQQ
+[![Auto Job Applier demo video](https://github.com/GodsScion/Auto_job_applier_linkedIn/assets/100998531/429f7753-ebb0-499b-bc5e-5b4ee28c4f69)](https://youtu.be/gMbB1fWZDHw)
+Click on above image to watch the demo or use this link https://youtu.be/gMbB1fWZDHw
 
 
-## Feature List (I'm yet to complete the documentation, I'm adding in more features)
+## Feature List (I'm yet to complete the documentation, I'm adding in more features, still in development)
 
 **General Features:**
 
@@ -96,9 +96,11 @@ Thank you for using the job application tool! Your support means everything to m
 
 As you continue your job search, I hope this tool has provided you with valuable assistance and streamlined your efforts.
 
-Sharing is caring! If you found this tool helpful, consider sharing it with your peers and network. By doing so, you can empower others in their job hunt, just as you've been empowered.
+To continue improving and maintaining this tool, I rely on the support of users like you. If you believe in its mission and want to contribute, you can support me by sharing about this project with your peers and network.
 
-To continue improving and maintaining this tool, I rely on the support of users like you. If you believe in its mission and want to contribute, you can support me on <PATREON_LINK>. Every contribution, big or small, makes a significant impact!
+If you need a post to communicate about it: https://www.linkedin.com/posts/saivigneshgolla_jobsearch-jobapplication-careerdevelopment-activity-7166416367628341249-WE_8
+
+By doing so, you can empower others in their job hunt, just as you've been empowered.. Every contribution, big or small, makes a significant impact!
 
 As an independent developer, I pour my heart and soul into creating tools like this, driven by the genuine desire to make a positive impact. Your support, whether through donations or simply spreading the word, means the world to me and helps keep this project alive and thriving.
 

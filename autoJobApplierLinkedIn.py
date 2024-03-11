@@ -18,7 +18,7 @@ import csv
 import re
 import pyautogui
 pyautogui.FAILSAFE = False
-from random import choice, shuffle
+from random import choice, shuffle, randint
 from datetime import datetime
 from modules.open_chrome import *
 from selenium.webdriver.common.by import By
@@ -37,7 +37,7 @@ if run_in_background == True:
     pause_at_failed_question = False
     pause_before_submit = False
     run_non_stop = False
-
+tabs_count = 1
 
 
 #< Login Functions
@@ -189,7 +189,7 @@ def get_job_main_details(job):
 
 
 # Function to check for Blacklisted words in About Company
-def check_blacklist(rejected_jobs,job_id):
+def check_blacklist(rejected_jobs,job_id,company,blacklisted_companies):
     about_company_org = find_by_class(driver, "jobs-company__box")
     scroll_to_view(driver, about_company_org)
     about_company_org = about_company_org.text
@@ -204,10 +204,12 @@ def check_blacklist(rejected_jobs,job_id):
         for word in blacklist_words: 
             if word.lower() in about_company: 
                 rejected_jobs.add(job_id)
+                blacklisted_companies.add(company)
                 raise ValueError(f'Found the word "{word}" in \n"{about_company_org}"')
-    buffer(1)
-    scroll_to_view(driver, find_by_class(driver, "jobs-unified-top-card"))
-    return rejected_jobs
+    buffer(click_gap)
+    jobs_top_card = try_find_by_classes(driver, ["job-details-jobs-unified-top-card__primary-description-container","job-details-jobs-unified-top-card__primary-description","jobs-unified-top-card__primary-description"])
+    scroll_to_view(driver, jobs_top_card)
+    return rejected_jobs, blacklisted_companies, jobs_top_card
 
 
 
@@ -228,64 +230,82 @@ def answer_common_questions(label, answer):
 
 
 # Function to answer the questions for Easy Apply
-def answer_questions(questions_list):
-    # Find all Select Questions
-    select_buttons = driver.find_elements(By.XPATH, "//select")
-    for select in select_buttons:
-        label_org = "Unknown"
-        try: label_org = driver.find_element(By.XPATH, f"//label[@for='{select.get_attribute('id')}']").find_element(By.CLASS_NAME, "visually-hidden").text
-        except: pass
-        answer = 'Yes'
-        label = label_org.lower()
-        answer = answer_common_questions(label,answer)
-        if 'gender' in label or 'sex' in label: answer = gender
-        if 'disability' in label: answer = disability_status
-        select = Select(select)
-        selected_option = select.first_selected_option.text
-        if selected_option != "Select an option": continue
-        try:
-            select.select_by_visible_text(answer)
-        except NoSuchElementException as e:
-            print_lg(f'Failed to find an option with text "{answer}" for question labelled "{label_org}", answering randomly!')
-        questions_list.add((label_org, select.first_selected_option.text, "select")) # <<<<<<<<<<<<<<<<<<
+def answer_questions(questions_list, work_location):
+    # Get all questions from the page
+    all_questions = driver.find_elements(By.CLASS_NAME, "jobs-easy-apply-form-element")
 
+    for Question in all_questions:
 
-    # Find all radio questions
-    all_radio_questions = driver.find_elements(By.XPATH, '//fieldset[@data-test-form-builder-radio-button-form-component="true"]')
-    for question in all_radio_questions:
-        label = question.find_elements(By.XPATH, './/span[@data-test-form-builder-radio-button-form-component__title]')
-        label = label[0].find_element(By.CLASS_NAME, 'visually-hidden').text if len(label) > 0 else "Unknown"
-        answer = 'Yes'
-        label = label.lower()
-        answer = answer_common_questions(label,answer)
-        if 'citizenship' in label or 'employment eligibility' in label: answer = us_citizenship
-        if 'sponsorship' in label or 'visa' in label: answer = require_visa
-        try: question.find_element(By.XPATH, f".//label[normalize-space()='{answer}']").click()
-        except:
-            random = question.find_element(By.XPATH, ".//label[@data-test-text-selectable-option__label]")
-            answer = random.text
-            random.click()
-        questions_list.add((label, answer, "radio"))
-    
-    # Find all text questions and answer them
-    all_text_questions = driver.find_elements(By.CLASS_NAME, "artdeco-text-input--container")
-    for question in all_text_questions:
-        label_org = "Unknown"
-        try: label_org = question.find_element(By.CLASS_NAME, "artdeco-text-input--label").text
-        except: continue
-        answer = years_of_experience
-        label = label_org.lower()
-        answer = answer_common_questions(label,answer)
-        if 'name' in label or 'signature' in label: answer = full_name  # 'signature' in label or 'legal name' in label or 'your name' in label or 'full name' in label: answer = full_name
+        # Check if it's a select Question
+        select = try_xp(Question, "//select", False)
+        if select:
+            label_org = "Unknown"
+            label = try_xp(Question, f"//label[@for='{select.get_attribute('id')}']")
+            try: label_org = try_find_by_classes(label_org, False,  ["visually-hidden"]).text
+            except: pass
+            answer = 'Yes'
+            label = label_org.lower()
+            answer = answer_common_questions(label,answer)
+            if 'gender' in label or 'sex' in label: answer = gender
+            if 'disability' in label: answer = disability_status
+            select = Select(select)
+            selected_option = select.first_selected_option.text
+            if selected_option != "Select an option": continue
+            try:
+                select.select_by_visible_text(answer)
+            except NoSuchElementException as e:
+                print_lg(f'Failed to find an option with text "{answer}" for question labelled "{label_org}", answering randomly!')
+                select.select_by_index(randint(1, len(select.options)-1))            
+            questions_list.add((label_org, select.first_selected_option.text, "select")) # <<<<<<<<<<<<<<<<<<
+            continue
         
-        if 'website' in label or 'blog' in label or 'portfolio' in label: answer = website
-        if 'salary' in label or 'compensation' in label: answer = desired_salary
-        if 'scale of 1-10' in label: answer = confidence_level
-        if 'city' in label or 'location' in label: answer = current_city
-        text_input = question.find_element(By.CLASS_NAME, "artdeco-text-input--input")
-        if not text_input.get_attribute("value"): text_input.send_keys(answer)
-        questions_list.add((label_org, text_input.get_attribute("value"), "text"))
+        # Check if it's a radio Question
+        radio = try_xp(Question, '//fieldset[@data-test-form-builder-radio-button-form-component="true"]', False)
+        if radio:
+            label = try_xp(radio, './/span[@data-test-form-builder-radio-button-form-component__title]', False)
+            label = try_find_by_classes(label, ['visually-hidden']).text
+            label = label if len(label) > 0 else "Unknown"
+            answer = 'Yes'
+            label = label.lower()
+            answer = answer_common_questions(label,answer)
+            if 'citizenship' in label or 'employment eligibility' in label: answer = us_citizenship
+            if 'sponsorship' in label or 'visa' in label: answer = require_visa
+            if not try_xp(radio, f".//label[normalize-space()='{answer}']"):
+                first_radio = Question.find_element(By.XPATH, ".//label[@data-test-text-selectable-option__label]")
+                answer = first_radio.text
+                first_radio.click()
+            questions_list.add((label, answer, "radio"))
+            continue
+        
+        # Check if it's a text question
+        text = try_xp(Question, "//input[@type='text']", False)
+        if text: 
+            do_actions = False
+            label = try_xp(Question, ".//label[@for]", False)
+            try: 
+                label = try_find_by_classes(label, ['visually-hidden']).text
+                do_actions = True
+            except: label = label.text
+            label_org = label if label else "Unknown"
+            answer = years_of_experience
+            label = label_org.lower()
 
+            if not text.get_attribute("value"):
+                answer = answer_common_questions(label,answer)
+                if 'name' in label or 'signature' in label: answer = full_name  # 'signature' in label or 'legal name' in label or 'your name' in label or 'full name' in label: answer = full_name
+                if 'website' in label or 'blog' in label or 'portfolio' in label: answer = website
+                if 'salary' in label or 'compensation' in label: answer = desired_salary
+                if 'scale of 1-10' in label: answer = confidence_level
+                if 'city' in label or 'location' in label: answer = current_city if current_city else work_location
+            
+                text.send_keys(answer)
+                if do_actions:
+                    sleep(2)
+                    actions.send_keys(Keys.ARROW_DOWN)
+                    actions.send_keys(Keys.ENTER).perform()
+            questions_list.add((label, text.get_attribute("value"), "text"))
+
+    # Select todays date
     try_xp(driver, "//button[contains(@aria-label, 'This is today')]")
 
     # Collect important skills
@@ -310,8 +330,27 @@ def answer_questions(questions_list):
 
 
 
-
-
+# Function to open new tab and save external job application links
+def external_apply(pagination_element, job_id, job_link, resume, date_listed, application_link, screenshot_name):
+    global tabs_count
+    if easy_apply_only: 
+        print_lg("Easy apply failed I guess!")
+        if pagination_element != None: return True, application_link, tabs_count
+    try:
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(span, "Apply") and not(span[contains(@class, "disabled")])]'))).click()
+        windows = driver.window_handles
+        tabs_count = len(windows)
+        driver.switch_to.window(windows[-1])
+        application_link = driver.current_url
+        print_lg('Got the external application link "{}"'.format(application_link))
+        if close_tabs: driver.close()
+        driver.switch_to.window(linkedIn_tab)
+        return False, application_link, tabs_count
+    except Exception as e:
+        # print_lg(e)
+        print_lg("Failed to apply!")
+        failed_job(job_id, job_link, resume, date_listed, "Probably didn't find Apply button or unable to switch tabs.", e, application_link, screenshot_name)
+        return True, application_link, tabs_count
 
 
 
@@ -369,12 +408,23 @@ def discard_job():
 def apply_to_jobs(search_terms):
     applied_jobs = get_applied_job_ids()
     rejected_jobs = set()
+    blacklisted_companies = set()
+    global current_city
+    current_city = current_city.strip()
 
     if randomize_search_order:  shuffle(search_terms)
     for searchTerm in search_terms:
         driver.get(f"https://www.linkedin.com/jobs/search/?keywords={searchTerm}")
         print_lg("\n________________________________________________________________________________________________________________________\n")
         print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
+
+        if search_location.strip():
+            print_lg(f'Setting search location as: "{search_location.strip()}"')
+            search_location_ele = try_xp(driver, "//input[@aria-label='City, state, or zip code'and not(@disabled)]", False) #  and not(@aria-hidden='true')]")
+            search_location_ele.clear()
+            search_location_ele.send_keys(search_location.strip())
+            sleep(2)
+            actions.send_keys(Keys.ENTER).perform()
 
         apply_filters()
 
@@ -399,7 +449,10 @@ def apply_to_jobs(search_terms):
                     job_id,title,company,work_location,work_style = get_job_main_details(job)
                     
                     # Skip if previously rejected due to blacklist or already applied
-                    if job_id in rejected_jobs: 
+                    if company in blacklisted_companies:
+                        print_lg(f'Skipping "{title} | {company}" job (Blacklisted Company). Job ID: {job_id}!')
+                        continue
+                    elif job_id in rejected_jobs: 
                         print_lg(f'Skipping previously rejected "{title} | {company}" job. Job ID: {job_id}!')
                         continue
                     try:
@@ -425,7 +478,7 @@ def apply_to_jobs(search_terms):
                     screenshot_name = "Not Available"
 
                     try:
-                        rejected_jobs = check_blacklist(rejected_jobs,job_id)
+                        rejected_jobs, blacklisted_companies, jobs_top_card = check_blacklist(rejected_jobs,job_id,company,blacklisted_companies)
                     except ValueError as e:
                         print_lg('Skipping this job.', e)
                         failed_job(job_id, job_link, resume, date_listed, "Found Blacklisted words in About Company", e, "Skipped", screenshot_name)
@@ -466,8 +519,7 @@ def apply_to_jobs(search_terms):
                     try:
                         # try: time_posted_text = find_by_class(driver, "jobs-unified-top-card__posted-date", 2).text
                         # except: 
-                        jobs_top_card = try_find_by_classes(driver, ["job-details-jobs-unified-top-card__primary-description-container","job-details-jobs-unified-top-card__primary-description","jobs-unified-top-card__primary-description"])
-                        time_posted_text = jobs_top_card.find_element(By.XPATH, './/span[contains(normalize-space(), "ago")]').text
+                        time_posted_text = jobs_top_card.find_element(By.XPATH, './/span[contains(normalize-space(), " ago")]').text
                         if time_posted_text.__contains__("Reposted"):
                             reposted = True
                             time_posted_text = time_posted_text.replace("Reposted", "")
@@ -479,29 +531,9 @@ def apply_to_jobs(search_terms):
                     try:
                         description = find_by_class(driver, "jobs-box__html-content").text
                         descriptionLow = description.lower()
-##>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                        # import re
-
-                        # # Pre-compile regular expressions outside the function only once, pre compling once increase performance instead of compiling everytime the function is called!
-                        # pattern1 = re.compile(r'security clearance|polygraph|secret clearance') 
-
-                        # def skip_job(description, security_clearance):
-                        #     # Use find() method for substring search
-                        #     if not security_clearance and pattern1.search(description.lower()):
-                        #         print(f'Skipping this job. Found "Security Clearance" or "Polygraph" in:\n{description}')
-                        #         return True
-                        #     return False
-
-                        # # Example usage
-                        # description = "We are hiring for a position that requires a Top Secret security clearance."
-                        # security_clearance = False
-                        # skip_job(description, security_clearance)
-
                         if security_clearance == False and ('polygraph' in descriptionLow or 'security clearance' in descriptionLow or 'secret clearance' in descriptionLow):
                             print_lg(f'Skipping this job. Found "Security Clearence" or "Polygraph" in \n{description}')
                             experience_required = "Skipped checking (Polygraph)"
-
-#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                         if did_masters and current_experience >= 2 and 'master' in descriptionLow:
                             print_lg(f'Skipped checking for minimum years of experience required cause found the word "master" in \n{description}')
                             experience_required = "Skipped checking (Masters)"
@@ -547,7 +579,7 @@ def apply_to_jobs(search_terms):
                                         screenshot_name = screenshot(driver, job_id, "Failed at questions")
                                         errored = "stuck"
                                         raise Exception("Seems like stuck in a continuous loop of next, probably because of new questions.")
-                                    questions_list = answer_questions(questions_list)
+                                    questions_list = answer_questions(questions_list, work_location)
                                     try: next_button = driver.find_element(By.XPATH, '//span[normalize-space(.)="Review"]') 
                                     except NoSuchElementException:  next_button = driver.find_element(By.XPATH, '//button[contains(span, "Next")]')
                                     try: next_button.click()
@@ -581,23 +613,10 @@ def apply_to_jobs(search_terms):
                             continue
                     else:
                         # Case 2: Apply externally
-                        if easy_apply_only: 
-                            print_lg("Easy apply failed I guess!")
-                            if pagination_element != None: continue
-                        try:
-                            wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(span, "Apply") and not(span[contains(@class, "disabled")])]'))).click()
-                            windows = driver.window_handles
-                            driver.switch_to.window(windows[-1])
-                            application_link = driver.current_url
-                            print_lg('Got the external application link "{}"'.format(application_link))
-                            if close_tabs: driver.close()
-                            driver.switch_to.window(linkedIn_tab) 
-                        except Exception as e:
-                            # print_lg(e)
-                            print_lg("Failed to apply!")
-                            failed_job(job_id, job_link, resume, date_listed, "Probably didn't find Apply button or unable to switch tabs.", e, application_link, screenshot_name)
-                            continue
-                    
+                        global tabs_count
+                        skip, application_link, tabs_count = external_apply(pagination_element, job_id, job_link, resume, date_listed, application_link, screenshot_name)
+                        if skip: continue
+
                     submitted_jobs(job_id, title, company, work_location, work_style, description, experience_required, skills, hr_name, hr_link, resume, reposted, date_listed, date_applied, job_link, application_link, questions_list, connect_request)
 
                     print_lg(f'Successfully saved "{title} | {company}" job. Job ID: {job_id} info')
@@ -646,6 +665,8 @@ def main():
         if not os.path.exists(default_resume_path):   raise Exception('Your default resume "{}" is missing! Please update it\'s folder path in config.py or add a resume with exact name and path (check for spelling mistakes including cases).'.format(default_resume_path))
         
         # Login to LinkedIn
+        global tabs_count
+        tabs_count = len(driver.window_handles)
         driver.get("https://www.linkedin.com/login")
         if not is_logged_in_LN(): login_LN()
         global linkedIn_tab
@@ -703,6 +724,10 @@ def main():
         msg = f"{quote}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/"
         pyautogui.alert(msg, "Exiting..")
         print_lg(msg,"Closing the browser...")
+        if tabs_count >= 10:
+            msg = "NOTE: IF YOU HAVE MORE THAN 10 TABS OPENED, PLEASE CLOSE OR BOOKMARK THEM!\n\nOr it's highly likely that application will just open browser and not do anything next time!" 
+            pyautogui.alert(msg,"Info")
+            print_lg("\n"+msg)
         try: driver.quit()
         except Exception as e: critical_error_log("When quitting...", e)
 
