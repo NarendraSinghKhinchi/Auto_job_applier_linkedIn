@@ -22,6 +22,8 @@ Click on above image to watch the demo or use this link https://youtu.be/gMbB1fW
 - [Disclaimer](#-disclaimer)
 - [Terms and Conditions](#%EF%B8%8F-terms-and-conditions)
 - [License](#%EF%B8%8F-license)
+- [Socials](#-socials)
+- [Support and Discussions](#-community-support-and-discussions)
 
 
 ## ⚙️ How to install
@@ -39,6 +41,7 @@ Click on above image to watch the demo or use this link https://youtu.be/gMbB1fW
   If you are using Windows, click on `windows-setup.bat` available in the `/setup` folder, this will install the latest chromedriver automatically.
 * Open `config.py` file in `/setup` folder and enter your details, configure the tool as per your needs.
 * Run `autoJobApplierLinkedIn.py` and see the magic happen.
+* If you have questions or need help setting it up or to talk in general, join the github server: https://discord.gg/fFp7uUzWCY
 
 ## 🤩 Feature List
 (I'm yet to complete the documentation, I'm adding in more features, still in development)
@@ -136,6 +139,15 @@ With heartfelt appreciation, <br>
 
 
 ## 🗓️ Update History:
+### May 15, 2024
+- Added functionality for textarea type questions `summary`, `cover_letter`(Summary, Cover letter); checkbox type questions (acknowledgements)
+- Added feature to skip irrelevant jobs based on `bad_words` 
+- Improved performance for answering questions
+- Logic change for masters students skipping
+- Change variable names `blacklist_exceptions` -> `about_company_good_words` and `blacklist_words` -> `about_company_bad_words`
+- Added session summary for logs
+- Added option to turn off "Pause before Submit" until next run
+
 ### May 05, 2024
 - For questions similar to "What is your current location?", City posted in Job description will be posted as the answer if `current_city` is left empty in the configuration.
 - Added option to over write previously saved answers for a question `overwrite_previous_answers`.
@@ -187,6 +199,22 @@ See [AGPLv3 LICENSE](LICENSE) for more info.
 
 
 <br>
+
+## 🐧 Socials
+- **LinkedIn** : https://www.linkedin.com/in/saivigneshgolla/
+- **Email**    : saivigneshgolla@outlook.com
+- **Discord**  : godsscion
+
+## 🙌 Community Support and Discussions
+- **Discord Server** : https://discord.gg/fFp7uUzWCY
+- **GitHub**
+    - [All Discussions](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions)
+    - [Announcements](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/announcements)
+    - [General](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/general)
+    - [Feature requests or Ideas](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/feature-requests-or-ideas)
+    - [Polls](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/polls)
+    - [Community Flex](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/community-flex)
+    - [Support Q&A](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/support-q-a)
 
 ---
 

@@ -33,11 +33,24 @@ from modules.validator import validate_config
 if use_resume_generator:    from resume_generator import is_logged_in_GPT, login_GPT, open_resume_chat, create_custom_resume
 
 
+#< Global Variables and logics
+
 if run_in_background == True:
     pause_at_failed_question = False
     pause_before_submit = False
     run_non_stop = False
+
+useNewResume = True
+randomly_answered_questions = set()
+
 tabs_count = 1
+easy_applied_count = 0
+external_jobs_count = 0
+failed_count = 0
+skip_count = 0
+
+re_experience = re.compile(r'[(]?\s*(\d+)\s*[)]?\s*[-to]*\s*\d*[+]*\s*year[s]?', re.IGNORECASE)
+#>
 
 
 #< Login Functions
@@ -195,13 +208,13 @@ def check_blacklist(rejected_jobs,job_id,company,blacklisted_companies):
     about_company_org = about_company_org.text
     about_company = about_company_org.lower()
     skip_checking = False
-    for word in blacklist_exceptions:
+    for word in about_company_good_words:
         if word.lower() in about_company:
             print_lg(f'Found the word "{word}". So, skipped checking for blacklist words.')
             skip_checking = True
             break
     if not skip_checking:
-        for word in blacklist_words: 
+        for word in about_company_bad_words: 
             if word.lower() in about_company: 
                 rejected_jobs.add(job_id)
                 blacklisted_companies.add(company)
@@ -216,7 +229,7 @@ def check_blacklist(rejected_jobs,job_id,company,blacklisted_companies):
 # Function to extract years of experience required from About Job
 def extract_years_of_experience(text):
     # Extract all patterns like '10+ years', '5 years', '3-5 years', etc.
-    matches = re.findall(r'[(]?\s*(\d+)\s*[)]?\s*[-to]*\s*\d*[+]*\s*year[s]?', text, flags=re.IGNORECASE)
+    matches = re.findall(re_experience, text)
     if len(matches) == 0: 
         print_lg(f'Couldn\'t find experience requirement in About job \n{text}\n')
     return max([int(match) for match in matches if int(match) <= 12])
@@ -225,7 +238,7 @@ def extract_years_of_experience(text):
 
 # Function to answer common questions for Easy Apply
 def answer_common_questions(label, answer):
-    if ('hear' in label or 'come across' in label) and 'this' in label and ('job' in label or 'position' in label): answer = "LinkedIn"
+    if 'sponsorship' in label or 'visa' in label: answer = require_visa
     return answer
 
 
@@ -248,14 +261,20 @@ def answer_questions(questions_list, work_location):
             options = "".join([f' "{option.text}",' for option in select.options]) if label != "phone country code" else '"List of phone country codes"'
             prev_answer = selected_option
             if overwrite_previous_answers or selected_option == "Select an option":
-                answer = answer_common_questions(label,answer)
                 if 'gender' in label or 'sex' in label: answer = gender
-                if 'disability' in label: answer = disability_status
+                elif 'disability' in label: answer = disability_status
+                elif 'proficiency' in label: answer = 'Professional'
+                else: answer = answer_common_questions(label,answer)
                 try: select.select_by_visible_text(answer)
                 except NoSuchElementException as e:
+                    ''' <<<<<<<<<<<<<<<<<<  
+                        Only works if options match exactly, implement logic to check if word in options... 
+                        Also implement US voluntary self- identification
+                    '''
                     print_lg(f'Failed to find an option with text "{answer}" for question labelled "{label_org}", answering randomly!')
-                    select.select_by_index(randint(1, len(select.options)-1))            
-            questions_list.add((f'{label_org} [ {options} ]', select.first_selected_option.text, "select", prev_answer)) # <<<<<<<<<<<<<<<<<<
+                    select.select_by_index(randint(1, len(select.options)-1))
+                    randomly_answered_questions.add((f'{label_org} [ {options} ]',"select"))
+            questions_list.add((f'{label_org} [ {options} ]', select.first_selected_option.text, "select", prev_answer))
             continue
         
         # Check if it's a radio Question
@@ -263,27 +282,32 @@ def answer_questions(questions_list, work_location):
         if radio:
             prev_answer = None
             label = try_xp(radio, './/span[@data-test-form-builder-radio-button-form-component__title]', False)
-            label = try_find_by_classes(label, ['visually-hidden']).text
+            label = find_by_class(label, "visually-hidden", 2.0).text
             label_org = label if label else "Unknown"
             answer = 'Yes'
             label = label_org.lower()
 
-            label_org = label_org + " [ "
+            label_org += ' [ '
             options = radio.find_elements(By.TAG_NAME, 'input')
+            options_labels = []
             
             for option in options:
-                label_org =  f'{label_org} "{option.get_attribute("value")}",'
-                if option.is_selected(): prev_answer = option.get_attribute("value")
+                id = option.get_attribute("id")
+                option_label = try_xp(radio, f'.//label[@for="{id}"]', False)
+                options_labels.append( f'"{option_label.text if option_label else "Unknown"}"<{option.get_attribute("value")}>' ) # Saving option as "label <value>"
+                if option.is_selected(): prev_answer = options_labels[-1]
+                label_org += f' {options_labels[-1]},'
 
             if overwrite_previous_answers or prev_answer is None:
-                answer = answer_common_questions(label,answer)
                 if 'citizenship' in label or 'employment eligibility' in label: answer = us_citizenship
-                if 'sponsorship' in label or 'visa' in label: answer = require_visa
+                elif 'veteran' in label or 'protected' in label: answer = veteran_status
+                else: answer = answer_common_questions(label,answer)
                 if not try_xp(radio, f".//label[normalize-space()='{answer}']"):
-                    answer = options[0].get_attribute("value")
+                    answer = options_labels[0]
                     options[0].click()
+                    randomly_answered_questions.add((f'{label_org} ]',"radio"))
             else: answer = prev_answer
-            questions_list.add((label_org, answer, "radio", prev_answer))
+            questions_list.add((label_org+" ]", answer, "radio", prev_answer))
             continue
         
         # Check if it's a text question
@@ -294,45 +318,68 @@ def answer_questions(questions_list, work_location):
             try: label = label.find_element(By.CLASS_NAME,'visually-hidden').text
             except: label = label.text
             label_org = label if label else "Unknown"
-            answer = years_of_experience
+            answer = "" # years_of_experience
             label = label_org.lower()
 
             prev_answer = text.get_attribute("value")
             if not prev_answer or overwrite_previous_answers:
-                answer = answer_common_questions(label,answer)
-                if 'name' in label or 'signature' in label: answer = full_name  # 'signature' in label or 'legal name' in label or 'your name' in label or 'full name' in label: answer = full_name
-                if 'website' in label or 'blog' in label or 'portfolio' in label: answer = website
-                if 'salary' in label or 'compensation' in label: answer = desired_salary
-                if 'scale of 1-10' in label: answer = confidence_level
-                if 'city' in label or 'location' in label: 
+                if 'experience' in label: answer = years_of_experience
+                elif 'phone' in label or 'mobile' in label: answer = phone_number
+                elif 'city' in label or 'location' in label:
                     answer = current_city if current_city else work_location
-                    do_actions = True            
+                    do_actions = True
+                elif 'name' in label or 'signature' in label: answer = full_name  # 'signature' in label or 'legal name' in label or 'your name' in label or 'full name' in label: answer = full_name     # What if question is 'name of the city or university you attend, name of referral etc?'
+                elif 'website' in label or 'blog' in label or 'portfolio' in label: answer = website
+                elif 'salary' in label or 'compensation' in label: answer = desired_salary
+                elif 'scale of 1-10' in label: answer = confidence_level
+                elif ('hear' in label or 'come across' in label) and 'this' in label and ('job' in label or 'position' in label): answer = "LinkedIn"
+                else: answer = answer_common_questions(label,answer)
+                if answer == "":
+                    randomly_answered_questions.add((label_org, "text"))
+                    answer = years_of_experience
                 text.send_keys(answer)
                 if do_actions:
                     sleep(2)
                     actions.send_keys(Keys.ARROW_DOWN)
                     actions.send_keys(Keys.ENTER).perform()
             questions_list.add((label, text.get_attribute("value"), "text", prev_answer))
+            continue
+
+        # Check if it's a textarea question
+        text_area = try_xp(Question, ".//textarea", False)
+        if text_area:
+            label = try_xp(Question, ".//label[@for]", False).text
+            label_org = label.text if label else "Unknown"
+            label = label_org.lower()
+            answer = ""
+            prev_answer = text_area.get_attribute("value")
+            if not prev_answer or overwrite_previous_answers:
+                if 'summary' in label: answer = summary
+                elif 'cover' in label: answer = cover_letter
+                text_area.send_keys(answer)
+                if answer == "": 
+                    randomly_answered_questions.add((label_org, "textarea"))
+            questions_list.add((label, text_area.get_attribute("value"), "textarea", prev_answer))
+            continue
+
+        # Check if it's a checkbox question
+        checkbox = try_xp(Question, ".//input[@type='checkbox']", False)
+        if checkbox:
+            label = try_xp(Question, ".//span[@class='visually-hidden']", False)
+            label_org = label.text if label else "Unknown"
+            label = label_org.lower()
+            answer = try_xp(Question, ".//label[@for]", False).text
+            prev_answer = checkbox.is_selected()
+            if not prev_answer: checkbox.click()
+            questions_list.add((f'{label} ([X] {answer})', checkbox.is_selected(), "checkbox", prev_answer))
+            continue
 
     # Select todays date
     try_xp(driver, "//button[contains(@aria-label, 'This is today')]")
 
     # Collect important skills
     # if 'do you have' in label and 'experience' in label and ' in ' in label -> Get word (skill) after ' in ' from label
-    # if 'how many years of expereince do you have in ' in label -> Get word (skill) after ' in '
-
-    # Redundancy
-
-    # # Fill any left out texts with years_of_experience
-    # text_inputs = driver.find_elements(By.CLASS_NAME, "artdeco-text-input--input")
-    # for text_input in text_inputs:
-    #     if not text_input.get_attribute("value"): text_input.send_keys(years_of_experience)
-
-    # # All select questions
-    # all_select_questions = driver.find_elements(By.XPATH, "//label[@data-test-text-entity-list-form-title]")
-    # for question in all_select_questions:
-    #     question = question.text
-    #     questions_list.add((question, "Yes", "select"))    
+    # if 'how many years of experience do you have in ' in label -> Get word (skill) after ' in '
 
     return questions_list
 
@@ -359,6 +406,8 @@ def external_apply(pagination_element, job_id, job_link, resume, date_listed, ap
         # print_lg(e)
         print_lg("Failed to apply!")
         failed_job(job_id, job_link, resume, date_listed, "Probably didn't find Apply button or unable to switch tabs.", e, application_link, screenshot_name)
+        global failed_count
+        failed_count += 1
         return True, application_link, tabs_count
 
 
@@ -418,7 +467,7 @@ def apply_to_jobs(search_terms):
     applied_jobs = get_applied_job_ids()
     rejected_jobs = set()
     blacklisted_companies = set()
-    global current_city
+    global current_city, failed_count, skip_count, easy_applied_count, external_jobs_count, tabs_count, pause_before_submit, pause_at_failed_question, useNewResume
     current_city = current_city.strip()
 
     if randomize_search_order:  shuffle(search_terms)
@@ -491,6 +540,7 @@ def apply_to_jobs(search_terms):
                     except ValueError as e:
                         print_lg('Skipping this job.', e)
                         failed_job(job_id, job_link, resume, date_listed, "Found Blacklisted words in About Company", e, "Skipped", screenshot_name)
+                        skip_count += 1
                         continue
                     except Exception as e:
                         print_lg("Failed to scroll to About Company!")
@@ -539,22 +589,31 @@ def apply_to_jobs(search_terms):
 
                     # Get job description
                     try:
+                        found_masters = 0
                         description = find_by_class(driver, "jobs-box__html-content").text
                         descriptionLow = description.lower()
-                        if security_clearance == False and ('polygraph' in descriptionLow or 'security clearance' in descriptionLow or 'secret clearance' in descriptionLow):
-                            print_lg(f'Skipping this job. Found "Security Clearence" or "Polygraph" in \n{description}')
-                            experience_required = "Skipped checking (Polygraph)"
-                        if did_masters and current_experience >= 2 and 'master' in descriptionLow:
-                            print_lg(f'Skipped checking for minimum years of experience required cause found the word "master" in \n{description}')
-                            experience_required = "Skipped checking (Masters)"
-                        else:
-                            experience_required = extract_years_of_experience(description)
-                            if current_experience > -1 and experience_required > current_experience:
-                                message = f'Experience required {experience_required} > Current Experience {current_experience}\n{description}'
-                                print_lg('Skipping this job.', message)
-                                failed_job(job_id, job_link, resume, date_listed, "Required experience is high", message, "Skipped", screenshot_name)
-                                rejected_jobs.add(job_id)
+                        for word in bad_words:
+                            if word.lower() in descriptionLow:
+                                print_lg(f'Skipping this job. Found "{word}" in \n{description}')    
+                                experience_required = "Skipped checking (Bad word)"
+                                skip_count += 1
                                 continue
+                        if security_clearance == False and ('polygraph' in descriptionLow or 'security clearance' in descriptionLow or 'secret clearance' in descriptionLow):
+                            print_lg(f'Skipping this job. Found "Security Clearance" or "Polygraph" in \n{description}')
+                            experience_required = "Skipped checking (Polygraph)"
+                            skip_count += 1
+                            continue
+                        if did_masters and 'master' in descriptionLow:
+                            print_lg(f'Found the word "master" in \n{description}')
+                            found_masters = 2
+                        experience_required = extract_years_of_experience(description)
+                        if current_experience > -1 and experience_required > current_experience + found_masters:
+                            message = f'Experience required {experience_required} > Current Experience {current_experience + found_masters}\n\n{description}'
+                            print_lg('\nSkipping this job.', message)
+                            failed_job(job_id, job_link, resume, date_listed, "Required experience is high", message, "Skipped", screenshot_name)
+                            rejected_jobs.add(job_id)
+                            skip_count += 1
+                            continue
                     except Exception as e:
                         if description == "Unknown":    print_lg("Unable to extract job description!")
                         else:
@@ -562,17 +621,21 @@ def apply_to_jobs(search_terms):
                             print_lg("Unable to extract years of experience required!")
                         # print_lg(e)
 
+                    uploaded = False
                     # Case 1: Easy Apply Button
                     if wait_span_click(driver, "Easy Apply", 2):
                         try: 
                             try:
                                 errored = ""
-                                wait_span_click(driver, "Next", 1)
+                                modal = find_by_class(driver, "jobs-easy-apply-modal")
+                                wait_span_click(modal, "Next", 1)
                                 resume = default_resume_path
                                 # if description != "Unknown":
                                 #     resume = create_custom_resume(description)
-                                wait_span_click(driver, "Next", 1)
-                                # driver.find_element(By.NAME, "file").send_keys(os.path.abspath(resume))
+                                wait_span_click(modal, "Next", 1)
+                                if useNewResume:
+                                    modal.find_element(By.NAME, "file").send_keys(os.path.abspath(resume))
+                                    uploaded = True
                                 resume = os.path.basename(resume)
                                 next_button = True
                                 questions_list = set()
@@ -590,21 +653,26 @@ def apply_to_jobs(search_terms):
                                         errored = "stuck"
                                         raise Exception("Seems like stuck in a continuous loop of next, probably because of new questions.")
                                     questions_list = answer_questions(questions_list, work_location)
-                                    try: next_button = driver.find_element(By.XPATH, '//span[normalize-space(.)="Review"]') 
-                                    except NoSuchElementException:  next_button = driver.find_element(By.XPATH, '//button[contains(span, "Next")]')
+                                    try: next_button = modal.find_element(By.XPATH, '//span[normalize-space(.)="Review"]') 
+                                    except NoSuchElementException:  next_button = modal.find_element(By.XPATH, '//button[contains(span, "Next")]')
                                     try: next_button.click()
                                     except ElementClickInterceptedException: break    # Happens when it tries to click Next button in About Company photos section
                                     buffer(click_gap)
 
                             except NoSuchElementException: errored = "nose"
                             finally:
-                                if questions_list and errored != "stuck": print_lg("Answered the following questions...", questions_list)
-                                wait_span_click(driver, "Review", 2, scrollTop=True)
-                                if errored != "stuck" and pause_before_submit: pyautogui.alert('1. Please verify your information.\n2. If you edited something, please return to this final screen.\n3. DO NOT CLICK "Submit Application".\n\n\n\n\nYou can turn off "Pause before submit" setting in config.py',"Paused")
+                                if questions_list and errored != "stuck": 
+                                    print_lg("Answered the following questions...", questions_list)
+                                    print("\n\n" + "\n".join(str(question) for question in questions_list) + "\n\n")
+                                wait_span_click(driver, "Review", 1, scrollTop=True)
+                                cur_pause_before_submit = pause_before_submit
+                                if errored != "stuck" and cur_pause_before_submit:
+                                    pause_before_submit = False if "Turn off" == pyautogui.confirm('1. Please verify your information.\n2. If you edited something, please return to this final screen.\n3. DO NOT CLICK "Submit Application".\n\n\n\n\nYou can turn off "Pause before submit" setting in config.py\nTo TEMPORARILY turn it off, click "Turn off"', "Confirm your information",["Turn off", "Continue"]) else True
+                                    try_xp(modal, ".//span[normalize-space(.)='Review']")
                                 if wait_span_click(driver, "Submit application", 2, scrollTop=True): 
                                     date_applied = datetime.now()
                                     if not wait_span_click(driver, "Done", 2): actions.send_keys(Keys.ESCAPE).perform()
-                                elif errored != "stuck" and pause_before_submit and "Yes" in pyautogui.confirm("You submitted the application, didn't you 😒?", "Failed to find Submit Application!", ["Yes", "No"]):
+                                elif errored != "stuck" and cur_pause_before_submit and "Yes" in pyautogui.confirm("You submitted the application, didn't you 😒?", "Failed to find Submit Application!", ["Yes", "No"]):
                                     date_applied = datetime.now()
                                     wait_span_click(driver, "Done", 2)
                                 else:
@@ -619,18 +687,21 @@ def apply_to_jobs(search_terms):
                             # print_lg(e)
                             critical_error_log("Somewhere in Easy Apply process",e)
                             failed_job(job_id, job_link, resume, date_listed, "Problem in Easy Applying", e, application_link, screenshot_name)
+                            failed_count += 1
                             discard_job()
                             continue
                     else:
                         # Case 2: Apply externally
-                        global tabs_count
                         skip, application_link, tabs_count = external_apply(pagination_element, job_id, job_link, resume, date_listed, application_link, screenshot_name)
                         if skip: continue
 
                     submitted_jobs(job_id, title, company, work_location, work_style, description, experience_required, skills, hr_name, hr_link, resume, reposted, date_listed, date_applied, job_link, application_link, questions_list, connect_request)
+                    if uploaded:   useNewResume = False
 
                     print_lg(f'Successfully saved "{title} | {company}" job. Job ID: {job_id} info')
                     current_count += 1
+                    if application_link == "Easy Applied": easy_applied_count += 1
+                    else:   external_jobs_count += 1
                     applied_jobs.add(job_id)
 
                 # Switching to next page
@@ -653,7 +724,7 @@ def apply_to_jobs(search_terms):
 def run(total_runs):
     print_lg("\n########################################################################################################################\n")
     print_lg(f"Date and Time: {datetime.now()}")
-    print_lg(f"Cycle number: {total_runs+1}")
+    print_lg(f"Cycle number: {total_runs}")
     print_lg(f"Currently looking for jobs posted within '{date_posted}' and sorting them by '{sort_by}'")
     apply_to_jobs(search_terms)
     print_lg("########################################################################################################################\n")
@@ -669,17 +740,20 @@ chatGPT_tab = False
 linkedIn_tab = False
 def main():
     try:
+        global linkedIn_tab, tabs_count, useNewResume
         alert_title = "Error Occurred. Closing Browser!"
+        total_runs = 1        
         validate_config()
-        make_directories([file_name,failed_file_name,logs_folder_path+"/screenshots",default_resume_path,generated_resume_path+"/temp"])
-        if not os.path.exists(default_resume_path):   raise Exception('Your default resume "{}" is missing! Please update it\'s folder path in config.py or add a resume with exact name and path (check for spelling mistakes including cases).'.format(default_resume_path))
+        
+        if not os.path.exists(default_resume_path):
+            pyautogui.alert(text='Your default resume "{}" is missing! Please update it\'s folder path "default_resume_path" in config.py\n\nOR\n\nAdd a resume with exact name and path (check for spelling mistakes including cases).\n\n\nFor now the bot will continue using your previous upload from LinkedIn!'.format(default_resume_path), title="Missing Resume", button="OK")
+            useNewResume = False
         
         # Login to LinkedIn
-        global tabs_count
         tabs_count = len(driver.window_handles)
         driver.get("https://www.linkedin.com/login")
         if not is_logged_in_LN(): login_LN()
-        global linkedIn_tab
+        
         linkedIn_tab = driver.current_window_handle
 
         # Login to ChatGPT in a new tab for resume customization
@@ -696,7 +770,6 @@ def main():
 
         # Start applying to jobs
         driver.switch_to.window(linkedIn_tab)
-        total_runs = 0
         total_runs = run(total_runs)
         while(run_non_stop):
             if cycle_date_posted:
@@ -717,6 +790,14 @@ def main():
         critical_error_log("In Applier Main", e)
         pyautogui.alert(e,alert_title)
     finally:
+        print_lg("\n\nTotal runs:                     {}".format(total_runs))
+        print_lg("Jobs Easy Applied:              {}".format(easy_applied_count))
+        print_lg("External job links collected:   {}".format(external_jobs_count))
+        print_lg("                              ----------")
+        print_lg("Total applied or collected:     {}".format(easy_applied_count + external_jobs_count))
+        print_lg("\nFailed jobs:                    {}".format(failed_count))
+        print_lg("Irrelevant jobs skipped:        {}\n".format(skip_count))
+        if randomly_answered_questions: print_lg("\n\nQuestions randomly answered:\n  {}  \n\n".format(";\n".join(str(question) for question in randomly_answered_questions)))
         quote = choice([
             "You're one step closer than before.", 
             "All the best with your future interviews.", 
@@ -731,7 +812,7 @@ def main():
             "Obstacles are those frightful things you see when you take your eyes off your goal. - Henry Ford",
             "The only limit to our realization of tomorrow will be our doubts of today. - Franklin D. Roosevelt"
             ])
-        msg = f"{quote}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/"
+        msg = f"\n{quote}\n\n\nBest regards,\nSai Vignesh Golla\nhttps://www.linkedin.com/in/saivigneshgolla/\n\n"
         pyautogui.alert(msg, "Exiting..")
         print_lg(msg,"Closing the browser...")
         if tabs_count >= 10:
