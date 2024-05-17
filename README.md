@@ -1,5 +1,5 @@
-# LinkedIn Auto Job Applier 🤖
-This is an web scraping bot that automates the process of job applications on LinkedIn. It customizes your resume based on the collected job information, such as skills required, description, about company, etc. Answers all questions and applies to the job. 
+# LinkedIn AI Auto Job Applier 🤖
+This is an web scraping bot that automates the process of job applications on LinkedIn. It searches for jobs relevant to you, answers all questions in application form, customizes your resume based on the collected job information, such as skills required, description, about company, etc. and applies to the job. Can apply 100+ jobs in less than 1 hour.
 
 
 ## 📽️ See it in Action
@@ -13,10 +13,6 @@ Click on above image to watch the demo or use this link https://youtu.be/gMbB1fW
 - [Index](#-content)
 - [How to install](#%EF%B8%8F-how-to-install)
 - [Feature List](#-feature-list)
-  - [General Features](#general-features-)
-  - [Stealth features](#stealth-features-)
-  - [Upcoming Features](#upcoming-features-or-currently-in-development-%EF%B8%8F)
-  - [Currently Broken](#currently-broken-)
 - [My letter for YOU ❤️](#%EF%B8%8F-my-heartfelt-letter-to-you-%EF%B8%8F)
 - [Update History](#%EF%B8%8F-update-history)
 - [Disclaimer](#-disclaimer)
@@ -139,6 +135,22 @@ With heartfelt appreciation, <br>
 
 
 ## 🗓️ Update History:
+### Sep 07, 2024
+- Restructured config file
+- Fixed pagination bug
+
+### Aug 21, 2024
+- Performance improvements (skip clicking on applied jobs and blacklisted companies)
+- Stop when easy apply application limit is reached
+- Added ability to discard from pause at submission dialogue box
+- Added support for address input
+- Bug fixed radio questions, added support for physical disability questions
+- Added framework for future config file updates
+
+### June 19, 2024
+- Major Bug fixes (Text Area type questions)
+- Made uploading default resume as not required
+
 ### May 15, 2024
 - Added functionality for textarea type questions `summary`, `cover_letter`(Summary, Cover letter); checkbox type questions (acknowledgements)
 - Added feature to skip irrelevant jobs based on `bad_words` 
@@ -149,16 +161,16 @@ With heartfelt appreciation, <br>
 - Added option to turn off "Pause before Submit" until next run
 
 ### May 05, 2024
-- For questions similar to "What is your current location?", City posted in Job description will be posted as the answer if `current_city` is left empty in the configuration.
-- Added option to over write previously saved answers for a question `overwrite_previous_answers`.
-- Tool will now save previous answer of a question.
-- Tool will now collect all available options for a Radio type or Select type question.
-- Major update in answering logic for Easy Apply Application questions.
-- Added Safe mode option for quick stable launches `safe_mode`.
+- For questions similar to "What is your current location?", City posted in Job description will be posted as the answer if `current_city` is left empty in the configuration
+- Added option to over write previously saved answers for a question `overwrite_previous_answers`
+- Tool will now save previous answer of a question
+- Tool will now collect all available options for a Radio type or Select type question
+- Major update in answering logic for Easy Apply Application questions
+- Added Safe mode option for quick stable launches `safe_mode`
 
 ### May 04, 2024
-- Added option to fill in "City, state, or zip code" search box `search_location`.
-- Bug fixes in answering City or location question.
+- Added option to fill in "City, state, or zip code" search box `search_location`
+- Bug fixes in answering City or location question
 
 
 [back to index](#-content)
@@ -203,6 +215,7 @@ See [AGPLv3 LICENSE](LICENSE) for more info.
 ## 🐧 Socials
 - **LinkedIn** : https://www.linkedin.com/in/saivigneshgolla/
 - **Email**    : saivigneshgolla@outlook.com
+- **X/Twitter**: https://x.com/gods_scion
 - **Discord**  : godsscion
 
 ## 🙌 Community Support and Discussions
