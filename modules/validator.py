@@ -70,9 +70,12 @@ def validate_questions() -> None | ValueError | TypeError:
     check_string(require_visa, "require_visa", ["Yes", "No"])
     check_string(current_city, "current_city")
     check_string(website, "website")
-    check_string(desired_salary, "desired_salary")
+    check_string(linkedIn, "linkedIn")
+    check_int(desired_salary, "desired_salary")
     check_string(us_citizenship, "us_citizenship", ["U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident", "Other"])
     check_string(headline, "headline")
+    check_int(notice_period, "notice_period")
+    check_int(current_ctc, "current_ctc")
     check_string(summary, "summary")
     check_string(cover_letter, "cover_letter")
     check_string(recent_employer, "recent_employer")
@@ -155,7 +158,7 @@ def validate_settings() -> None | ValueError | TypeError:
     check_boolean(safe_mode, "safe_mode")
     check_boolean(smooth_scroll, "smooth_scroll")
     check_boolean(keep_screen_awake, "keep_screen_awake")
-    check_boolean(undetected_mode, "undetected_mode")
+    check_boolean(stealth_mode, "stealth_mode")
 
 
 
