@@ -50,6 +50,8 @@ def validate_personals() -> None | ValueError | TypeError:
     check_string(last_name, "last_name", min_length=1)
 
     check_string(phone_number, "phone_number", min_length=10)
+
+    check_string(current_city, "current_city")
     
     check_string(street, "street")
     check_string(state, "state")
@@ -68,15 +70,14 @@ def validate_questions() -> None | ValueError | TypeError:
     check_string(default_resume_path, "default_resume_path")
     check_string(years_of_experience, "years_of_experience")
     check_string(require_visa, "require_visa", ["Yes", "No"])
-    check_string(current_city, "current_city")
     check_string(website, "website")
     check_string(linkedIn, "linkedIn")
     check_int(desired_salary, "desired_salary")
     check_string(us_citizenship, "us_citizenship", ["U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident", "Other"])
-    check_string(headline, "headline")
+    check_string(linkedin_headline, "linkedin_headline")
     check_int(notice_period, "notice_period")
     check_int(current_ctc, "current_ctc")
-    check_string(summary, "summary")
+    check_string(linkedin_summary, "linkedin_summary")
     check_string(cover_letter, "cover_letter")
     check_string(recent_employer, "recent_employer")
     check_string(confidence_level, "confidence_level")

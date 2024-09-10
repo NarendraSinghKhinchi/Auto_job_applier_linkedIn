@@ -17,25 +17,33 @@ import os
 import csv
 import re
 import pyautogui
-pyautogui.FAILSAFE = False
+
 from random import choice, shuffle, randint
 from datetime import datetime
-from modules.open_chrome import *
-from selenium.webdriver.remote.webelement import WebElement
+
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, ElementNotInteractableException
+
 from config.personals import *
 from config.questions import *
 from config.search import *
 from config.secrets import *
 from config.settings import *
+
+from modules.open_chrome import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
+from modules.ai.openaiConnections import *
+
 from typing import Literal
+
+
+pyautogui.FAILSAFE = False
 # if use_resume_generator:    from resume_generator import is_logged_in_GPT, login_GPT, open_resume_chat, create_custom_resume
 
 
@@ -239,7 +247,7 @@ def get_page_info() -> tuple[WebElement | None, int | None]:
         print_lg("Failed to find Pagination element, hence couldn't scroll till end!")
         pagination_element = None
         current_page = None
-        # print_lg(e)
+        print_lg(e)
     return pagination_element, current_page
 
 
@@ -494,7 +502,7 @@ def answer_questions(questions_list: set, work_location: str) -> set:
                 elif 'linkedin' in label: answer = linkedIn
                 elif 'website' in label or 'blog' in label or 'portfolio' in label or 'link' in label: answer = website
                 elif 'scale of 1-10' in label: answer = confidence_level
-                elif 'headline' in label: answer = headline
+                elif 'headline' in label: answer = linkedin_headline
                 elif ('hear' in label or 'come across' in label) and 'this' in label and ('job' in label or 'position' in label): answer = "https://github.com/GodsScion/Auto_job_applier_linkedIn"
                 elif 'state' in label or 'province' in label: answer = state
                 elif 'zip' in label or 'postal' in label or 'code' in label: answer = zipcode
@@ -521,7 +529,7 @@ def answer_questions(questions_list: set, work_location: str) -> set:
             answer = ""
             prev_answer = text_area.get_attribute("value")
             if not prev_answer or overwrite_previous_answers:
-                if 'summary' in label: answer = summary
+                if 'summary' in label: answer = linkedin_summary
                 elif 'cover' in label: answer = cover_letter
                 text_area.clear()
                 text_area.send_keys(answer)
@@ -563,10 +571,11 @@ def answer_questions(questions_list: set, work_location: str) -> set:
 
 
 
-# Function to open new tab and save external job application links
 def external_apply(pagination_element: WebElement, job_id: str, job_link: str, resume: str, date_listed, application_link: str, screenshot_name: str) -> tuple[bool, str, int]:
+    '''
+    Function to open new tab and save external job application links
+    '''
     global tabs_count, dailyEasyApplyLimitReached
-    
     if easy_apply_only:
         try:
             if "exceeded the daily application limit" in driver.find_element(By.CLASS_NAME, "artdeco-inline-feedback__message").text: dailyEasyApplyLimitReached = True
@@ -574,13 +583,14 @@ def external_apply(pagination_element: WebElement, job_id: str, job_link: str, r
         print_lg("Easy apply failed I guess!")
         if pagination_element != None: return True, application_link, tabs_count
     try:
-        wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(span, "Apply") and not(span[contains(@class, "disabled")])]'))).click()
+        wait.until(EC.element_to_be_clickable((By.XPATH, ".//button[contains(@class,'jobs-apply-button') and contains(@class, 'artdeco-button--3')]"))).click() # './/button[contains(span, "Apply") and not(span[contains(@class, "disabled")])]'
+        wait_span_click(driver, "Continue", 1, True, False)
         windows = driver.window_handles
         tabs_count = len(windows)
         driver.switch_to.window(windows[-1])
         application_link = driver.current_url
         print_lg('Got the external application link "{}"'.format(application_link))
-        if close_tabs: driver.close()
+        if close_tabs and driver.current_window_handle != linkedIn_tab: driver.close()
         driver.switch_to.window(linkedIn_tab)
         return False, application_link, tabs_count
     except Exception as e:
@@ -595,19 +605,27 @@ def external_apply(pagination_element: WebElement, job_id: str, job_link: str, r
 
 
 #< Failed attempts logging
-
-# Function to update failed jobs list in excel
 def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str, exception: Exception, application_link: str, screenshot_name: str) -> None:
-    with open(failed_file_name, 'a', newline='', encoding='utf-8') as file:
-        fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Assumed Reason', 'Stack Trace', 'External Job link', 'Screenshot Name']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        if file.tell() == 0: writer.writeheader()
-        writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
-        file.close()
+    '''
+    Function to update failed jobs list in excel
+    '''
+    try:
+        with open(failed_file_name, 'a', newline='', encoding='utf-8') as file:
+            fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Assumed Reason', 'Stack Trace', 'External Job link', 'Screenshot Name']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            if file.tell() == 0: writer.writeheader()
+            writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
+            file.close()
+    except Exception as e:
+        print_lg("Failed to update failed jobs list!", e)
+        pyautogui.alert("Failed to update the excel of failed jobs!\nProbably because of 1 of the following reasons:\n1. The file is currently open or in use by another program\n2. Permission denied to write to the file\n3. Failed to find the file", "Failed Logging")
 
 
-# Function to to take screenshot for debugging
 def screenshot(driver: WebDriver, job_id: str, failedAt: str) -> str:
+    '''
+    Function to to take screenshot for debugging
+    - Returns screenshot name as String
+    '''
     screenshot_name = "{} - {} - {}.png".format( job_id, failedAt, str(datetime.now()) )
     path = logs_folder_path+"/screenshots/"+screenshot_name.replace(":",".")
     # special_chars = {'*', '"', '\\', '<', '>', ':', '|', '?'}
@@ -618,21 +636,27 @@ def screenshot(driver: WebDriver, job_id: str, failedAt: str) -> str:
 
 
 
-# Function to create or append to the CSV file, once the application is submitted successfully
 def submitted_jobs(job_id: str, title: str, company: str, work_location: str, work_style: str, description: str, experience_required: int | Literal['Unknown', 'Error in extraction'], 
                    skills: list[str] | Literal['In Development'], hr_name: str | Literal['Unknown'], hr_link: str | Literal['Unknown'], resume: str, 
                    reposted: bool, date_listed: datetime | Literal['Unknown'], date_applied:  datetime | Literal['Pending'], job_link: str, application_link: str, 
                    questions_list: set | None, connect_request: Literal['In Development']) -> None:
-    with open(file_name, mode='a', newline='', encoding='utf-8') as csv_file:
-        fieldnames = ['Job ID', 'Title', 'Company', 'Work Location', 'Work Style', 'About Job', 'Experience required', 'Skills required', 'HR Name', 'HR Link', 'Resume', 'Re-posted', 'Date Posted', 'Date Applied', 'Job Link', 'External Job link', 'Questions Found', 'Connect Request']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        if csv_file.tell() == 0: writer.writeheader()
-        writer.writerow({'Job ID':job_id, 'Title':title, 'Company':company, 'Work Location':work_location, 'Work Style':work_style, 
-                        'About Job':description, 'Experience required': experience_required, 'Skills required':skills, 
-                            'HR Name':hr_name, 'HR Link':hr_link, 'Resume':resume, 'Re-posted':reposted, 
-                            'Date Posted':date_listed, 'Date Applied':date_applied, 'Job Link':job_link, 
-                            'External Job link':application_link, 'Questions Found':questions_list, 'Connect Request':connect_request})
-    csv_file.close()
+    '''
+    Function to create or update the Applied jobs CSV file, once the application is submitted successfully
+    '''
+    try:
+        with open(file_name, mode='a', newline='', encoding='utf-8') as csv_file:
+            fieldnames = ['Job ID', 'Title', 'Company', 'Work Location', 'Work Style', 'About Job', 'Experience required', 'Skills required', 'HR Name', 'HR Link', 'Resume', 'Re-posted', 'Date Posted', 'Date Applied', 'Job Link', 'External Job link', 'Questions Found', 'Connect Request']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            if csv_file.tell() == 0: writer.writeheader()
+            writer.writerow({'Job ID':job_id, 'Title':title, 'Company':company, 'Work Location':work_location, 'Work Style':work_style, 
+                            'About Job':description, 'Experience required': experience_required, 'Skills required':skills, 
+                                'HR Name':hr_name, 'HR Link':hr_link, 'Resume':resume, 'Re-posted':reposted, 
+                                'Date Posted':date_listed, 'Date Applied':date_applied, 'Job Link':job_link, 
+                                'External Job link':application_link, 'Questions Found':questions_list, 'Connect Request':connect_request})
+        csv_file.close()
+    except Exception as e:
+        print_lg("Failed to update submitted jobs list!", e)
+        pyautogui.alert("Failed to update the excel of applied jobs!\nProbably because of 1 of the following reasons:\n1. The file is currently open or in use by another program\n2. Permission denied to write to the file\n3. Failed to find the file", "Failed Logging")
 
 
 
@@ -798,7 +822,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
 
                     uploaded = False
                     # Case 1: Easy Apply Button
-                    if wait_span_click(driver, "Easy Apply", 2):
+                    if try_xp(driver, ".//button[contains(@class,'jobs-apply-button') and contains(@class, 'artdeco-button--3') and contains(@aria-label, 'Easy')]"):
                         try: 
                             try:
                                 errored = ""

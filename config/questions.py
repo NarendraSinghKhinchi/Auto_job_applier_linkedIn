@@ -26,27 +26,11 @@ years_of_experience = "5"          # A number in quotes Eg: "0","1","2","3","4",
 # Do you need visa sponsorship now or in future?
 require_visa = "No"               # "Yes" or "No"
 
-# What is your current city? If left empty as "", the bot will fill in location of jobs location.
-current_city = ""                  # Los Angeles, San Francisco, etc.
-
 # What is the link to your portfolio website, leave it empty as "", if you want to leave this question unanswered
 website = "https://github.com/GodsScion"                        # "www.example.bio" or "" and so on....
 
 # Please provide the link to your LinkedIn profile.
 linkedIn = "https://www.linkedin.com/in/saivigneshgolla/"       # "https://www.linkedin.com/in/example" or "" and so on...
-
-# What to enter in your desired salary question (American and European), What is your expected CTC (Indian subcontinent)?, only enter in numbers as some companies only allow numbers,
-desired_salary = 2400000          # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes
-'''
-Note: If question has the word "lakhs" in it (Example: What is your expected CTC in lakhs), 
-then it will add '.' before last 5 digits and answer. Examples: 
-* "2400000" will be answered as "24.00"
-* "850000" will be answered as "8.50"
-And if asked in months, then it will divide by 12 and answer. Examples:
-* "2400000" will be answered as "200000"
-* "850000" will be answered as "70833"
-'''
-
 
 # What is the status of your citizenship? # If left empty as "", tool will not answer the question. However, note that some companies make it compulsory to be answered
 # Valid options are: "U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident" or "Other"
@@ -56,8 +40,20 @@ us_citizenship = "U.S. Citizen/Permanent Resident"
 
 ## SOME ANNOYING QUESTIONS BY COMPANIES 🫠 ##
 
+# What to enter in your desired salary question (American and European), What is your expected CTC (South Asian and others)?, only enter in numbers as some companies only allow numbers,
+desired_salary = 1200000          # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes
+'''
+Note: If question has the word "lakhs" in it (Example: What is your expected CTC in lakhs), 
+then it will add '.' before last 5 digits and answer. Examples: 
+* 2400000 will be answered as "24.00"
+* 850000 will be answered as "8.50"
+And if asked in months, then it will divide by 12 and answer. Examples:
+* 2400000 will be answered as "200000"
+* 850000 will be answered as "70833"
+'''
+
 # What is your current CTC? Some companies make it compulsory to be answered in numbers...
-current_ctc = 75000            # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes
+current_ctc = 800000            # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes
 '''
 Note: If question has the word "lakhs" in it (Example: What is your current CTC in lakhs), 
 then it will add '.' before last 5 digits and answer. Examples: 
@@ -67,6 +63,9 @@ then it will add '.' before last 5 digits and answer. Examples:
 # * 2400000 will be answered as "200000"
 # * 850000 will be answered as "70833"
 '''
+
+# (In Development) # Currency of salaries you mentioned. Companies that allow string inputs will add this tag to the end of numbers. Eg: 
+# currency = "INR"                 # "USD", "INR", "EUR", etc.
 
 # What is your notice period in days?
 notice_period = 30                   # Any number >= 0 without quotes. Eg: 0, 7, 15, 30, 45, etc.
@@ -81,15 +80,27 @@ then it will divide by 30 or 7 and answer respectively. Examples:
   - "0" OR "0" if asked in months OR "0" if asked in weeks
 '''
 
-
 # Your LinkedIn headline in quotes Eg: "Software Engineer @ Google, Masters in Computer Science", "Recent Grad Student @ MIT, Computer Science"
-headline = "Headline"
+linkedin_headline = "Full Stack Developer with Masters in Computer Science and 4+ years of experience" # "Headline" or "" to leave this question unanswered
 
-# Your summary in quotes, use \n to add line breaks
-summary = "Summary"
+# Your summary in quotes, use \n to add line breaks if using single quotes "Summary".You can skip \n if using triple quotes """Summary"""
+linkedin_summary = """
+I'm a Senior Software Engineer at Amazon with Masters in CS and 4+ years of experience in developing and maintaining Full Stack Web applications and cloud solutions. 
+Specialized in React, Node.js, and Python.
+"""
 
-# Your cover letter in quotes, use \n to add line breaks
-cover_letter = "Cover Letter"
+'''
+Note: If left empty as "", the tool will not answer the question. However, note that some companies make it compulsory to be answered. Use \n to add line breaks.
+''' 
+
+# Your cover letter in quotes, use \n to add line breaks if using single quotes "Cover Letter".You can skip \n if using triple quotes """Cover Letter""" (This question makes sense though)
+cover_letter = """
+Cover Letter
+"""
+
+'''
+Note: If left empty as "", the tool will not answer the question. However, note that some companies make it compulsory to be answered. Use \n to add line breaks.
+''' 
 
 # Name of your most recent employer
 recent_employer = "Not Applicable" # "", "Lala Company", "Google", "Snowflake", "Databricks"
@@ -113,6 +124,7 @@ pause_at_failed_question = True    # True or False ,   Will be treated as False 
 
 # Do you want to overwrite previous answers?
 overwrite_previous_answers = False # True or False
+
 
 
 
