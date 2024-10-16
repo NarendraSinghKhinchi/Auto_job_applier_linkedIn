@@ -68,8 +68,9 @@ Exact compensation may vary based on several factors, including skills, experien
 """
 
 def main() -> None:
-    client = client = OpenAI(base_url=llm_api_url, api_key=llm_api_key)
-    result = extract_skills(client, job_description, stream=True)
+    client = ai_create_openai_client()
+    ai_extract_skills(client ,job_description)
+    ai_close_openai_client(client)
 
 
 if __name__ == "__main__":
