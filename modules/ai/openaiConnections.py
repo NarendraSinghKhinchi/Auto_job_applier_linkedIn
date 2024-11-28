@@ -1,5 +1,23 @@
+'''
+Author:     Sai Vignesh Golla
+LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
+
+Copyright (C) 2024 Sai Vignesh Golla
+
+License:    GNU Affero General Public License
+            https://www.gnu.org/licenses/agpl-3.0.en.html
+            
+GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
+
+version:    24.12.29.12.30
+'''
+
+
 from config.secrets import *
 from config.settings import showAiErrorAlerts
+from config.personals import ethnicity, gender, disability_status, veteran_status
+from config.questions import *
+from config.search import security_clearance, did_masters
 
 from modules.helpers import print_lg, critical_error_log, convert_to_json
 from modules.ai.prompts import *
@@ -132,7 +150,7 @@ def ai_completion(client: OpenAI, messages: list[dict], response_format: dict = 
 
     # Select appropriate client
     completion: ChatCompletion | Iterator[ChatCompletionChunk]
-    if response_format and llm.get("spec") in ["openai", "openai-like"]:
+    if response_format and llm_spec in ["openai", "openai-like"]:
         completion = client.chat.completions.create(
                 model=llm_model,
                 messages=messages,
@@ -200,11 +218,21 @@ def ai_answer_question(
 ) -> dict | ValueError:
     print_lg("-- ANSWERING QUESTION")
     try:
-        prompt = answer_question_prompt.format(question, options, job_description, about_company)
+        prompt = text_questions_prompt.format(question, __user_info)
         messages = [{"role": "user", "content": prompt}]
         return ai_completion(client, messages, stream)
     except Exception as e:
         ai_error_alert(f"Error occurred while answering question. {apiCheckInstructions}", e)
+
+
+
+def ai_gen_experience(
+    client: OpenAI, 
+    job_description: str, about_company: str, 
+    required_skills: dict, user_experience: dict,
+    stream: bool = stream_output
+) -> dict | ValueError:
+    pass
 
 
 

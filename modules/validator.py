@@ -9,6 +9,7 @@ License:    GNU Affero General Public License
             
 GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 
+version:    24.12.29.12.30
 '''
 
 
@@ -16,15 +17,16 @@ GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 
 # from config.XdepricatedX import *
 
+__validation_file_path = ""
 
 def check_int(var: int, var_name: str, min_value: int=0) -> bool | TypeError | ValueError:
-    if not isinstance(var, int): raise TypeError(f'Invalid input for {var_name}. Expecting an Integer! Note: DoNOT surround an Integer in Quotes ("")!')
-    if var < min_value: raise ValueError(f'Invalid input for {var_name}. Expecting an Integer greater than or equal to {min_value}!')
+    if not isinstance(var, int): raise TypeError(f'The variable "{var_name}" in "{__validation_file_path}" must be an Integer!\nReceived "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to be an Integer.\nExample: `{var_name} = 10`\n\nNOTE: Do NOT surround Integer values in quotes ("10")X !\n\n')
+    if var < min_value: raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects an Integer greater than or equal to `{min_value}`! Received `{var}` instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" accordingly.')
     return True
 
 def check_boolean(var: bool, var_name: str) -> bool | ValueError:
     if var == True or var == False: return True
-    raise ValueError(f'Invalid input for {var_name}. Expecting a Boolean input "True" or "False", not "{var}" and do NOT surround True or False in Quotes ("")!')
+    raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects a Boolean input `True` or `False`, not "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to either `True` or `False` (case-sensitive, T and F must be CAPITAL/uppercase).\nExample: `{var_name} = True`\n\nNOTE: Do NOT surround Boolean values in quotes ("True")X !\n\n')
 
 def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
     if not isinstance(var, str): raise TypeError(f'Invalid input for {var_name}. Expecting a String!')
@@ -45,6 +47,12 @@ def check_list(var: list, var_name: str, options: list=[], min_length: int=0) ->
 
 from config.personals import *
 def validate_personals() -> None | ValueError | TypeError:
+    '''
+    Validates all variables in the `/config/personals.py` file.
+    '''
+    global __validation_file_path
+    __validation_file_path = "config/personals.py"
+
     check_string(first_name, "first_name", min_length=1)
     check_string(middle_name, "middle_name")
     check_string(last_name, "last_name", min_length=1)
@@ -67,6 +75,12 @@ def validate_personals() -> None | ValueError | TypeError:
 
 from config.questions import *
 def validate_questions() -> None | ValueError | TypeError:
+    '''
+    Validates all variables in the `/config/questions.py` file.
+    '''
+    global __validation_file_path
+    __validation_file_path = "config/questions.py"
+
     check_string(default_resume_path, "default_resume_path")
     check_string(years_of_experience, "years_of_experience")
     check_string(require_visa, "require_visa", ["Yes", "No"])
@@ -89,6 +103,12 @@ def validate_questions() -> None | ValueError | TypeError:
 
 from config.search import *
 def validate_search() -> None | ValueError | TypeError:
+    '''
+    Validates all variables in the `/config/search.py` file.
+    '''
+    global __validation_file_path
+    __validation_file_path = "config/search.py"
+
     check_list(search_terms, "search_terms", min_length=1)
     check_string(search_location, "search_location")
     check_int(switch_number, "switch_number", 1)
@@ -116,6 +136,8 @@ def validate_search() -> None | ValueError | TypeError:
     check_boolean(in_your_network, "in_your_network")
     check_boolean(fair_chance_employer, "fair_chance_employer")
 
+    check_boolean(pause_after_filters, "pause_after_filters")
+
     check_list(about_company_bad_words, "about_company_bad_words")
     check_list(about_company_good_words, "about_company_good_words")
     check_list(bad_words, "bad_words")
@@ -128,6 +150,12 @@ def validate_search() -> None | ValueError | TypeError:
 
 from config.secrets import *
 def validate_secrets() -> None | ValueError | TypeError:
+    '''
+    Validates all variables in the `/config/secrets.py` file.
+    '''
+    global __validation_file_path
+    __validation_file_path = "config/secrets.py"
+
     check_string(username, "username", min_length=5)
     check_string(password, "password", min_length=5)
 
@@ -141,6 +169,12 @@ def validate_secrets() -> None | ValueError | TypeError:
 
 from config.settings import *
 def validate_settings() -> None | ValueError | TypeError:
+    '''
+    Validates all variables in the `/config/settings.py` file.
+    '''
+    global __validation_file_path
+    __validation_file_path = "config/settings.py"
+
     check_boolean(close_tabs, "close_tabs")
     check_boolean(follow_companies, "follow_companies")
     # check_boolean(connect_hr, "connect_hr")
@@ -170,6 +204,9 @@ def validate_settings() -> None | ValueError | TypeError:
 
 
 def validate_config() -> bool | ValueError | TypeError:
+    '''
+    Runs all validation functions to validate all variables in the config files.
+    '''
     validate_personals()
     validate_questions()
     validate_search()
