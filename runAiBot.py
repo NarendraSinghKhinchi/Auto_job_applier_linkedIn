@@ -19,6 +19,9 @@ import csv
 import re
 import pyautogui
 
+# Set CSV field size limit to prevent field size errors
+csv.field_size_limit(1000000)  # Set to 1MB instead of default 131KB
+
 from random import choice, shuffle, randint
 from datetime import datetime
 
@@ -27,19 +30,21 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, ElementNotInteractableException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, ElementNotInteractableException, WebDriverException
 
 from config.personals import *
 from config.questions import *
 from config.search import *
-from config.secrets import use_AI, username, password
+from config.secrets import use_AI, username, password, ai_provider
 from config.settings import *
 
 from modules.open_chrome import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
-from modules.ai.openaiConnections import *
+from modules.ai.openaiConnections import ai_create_openai_client, ai_extract_skills, ai_answer_question, ai_close_openai_client
+from modules.ai.deepseekConnections import deepseek_create_client, deepseek_extract_skills, deepseek_answer_question
+from modules.ai.geminiConnections import gemini_create_client, gemini_extract_skills, gemini_answer_question
 
 from typing import Literal
 
@@ -450,6 +455,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 options = "".join([f' "{option}",' for option in optionsText])
             prev_answer = selected_option
             if overwrite_previous_answers or selected_option == "Select an option":
+                ##> ------ WINDY_WINDWARD Email:karthik.sarode23@gmail.com - Added fuzzy logic to answer location based questions ------
                 if 'email' in label or 'phone' in label: 
                     answer = prev_answer
                 elif 'gender' in label or 'sex' in label: 
@@ -489,7 +495,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         possible_answer_phrases.append(answer.upper())
                         # Try without special characters
                         possible_answer_phrases.append(''.join(c for c in answer if c.isalnum()))
-                        
+                    ##<
                     foundOption = False
                     for phrase in possible_answer_phrases:
                         for option in optionsText:
@@ -622,18 +628,32 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 elif 'zip' in label or 'postal' in label or 'code' in label: answer = zipcode
                 elif 'country' in label: answer = country
                 else: answer = answer_common_questions(label,answer)
-                ##> ------ Dheeraj Deshwal : dheeraj9811 Email:dheeraj20194@iiitd.ac.in/dheerajdeshwal9811@gmail.com - Feature ------
+                ##> ------ Yang Li : MARKYangL - Feature ------
                 if answer == "":
                     if use_AI and aiClient:
                         try:
-                             answer = ai_answer_question(aiClient, label_org, question_type="text" ,job_description=job_description, user_information_all = user_information_all)
-                             print_lg(f'AI Answered recived for question"{label_org}" \nhere is answer : "{answer}"')
+                            if ai_provider.lower() == "openai":
+                                answer = ai_answer_question(aiClient, label_org, question_type="text", job_description=job_description, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "deepseek":
+                                answer = deepseek_answer_question(aiClient, label_org, options=None, question_type="text", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "gemini":
+                                answer = gemini_answer_question(aiClient, label_org, options=None, question_type="text", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            else:
+                                randomly_answered_questions.add((label_org, "text"))
+                                answer = years_of_experience
+                            if answer and isinstance(answer, str) and len(answer) > 0:
+                                print_lg(f'AI Answered received for question "{label_org}" \nhere is answer: "{answer}"')
+                            else:
+                                randomly_answered_questions.add((label_org, "text"))
+                                answer = years_of_experience
                         except Exception as e:
                             print_lg("Failed to get AI answer!", e)
+                            randomly_answered_questions.add((label_org, "text"))
+                            answer = years_of_experience
                     else:
                         randomly_answered_questions.add((label_org, "text"))
                         answer = years_of_experience
-                 ##<   
+                ##<
                 text.clear()
                 text.send_keys(answer)
                 if do_actions:
@@ -655,13 +675,27 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 if 'summary' in label: answer = linkedin_summary
                 elif 'cover' in label: answer = cover_letter
                 if answer == "":
-                ##> ------ Dheeraj Deshwal : dheeraj9811 Email:dheeraj20194@iiitd.ac.in/dheerajdeshwal9811@gmail.com - Feature ------
+                ##> ------ Yang Li : MARKYangL - Feature ------
                     if use_AI and aiClient:
                         try:
-                             answer = ai_answer_question(aiClient, label_org, question_type="textarea" ,job_description=job_description, user_information_all = user_information_all)
-                             print_lg(f'AI Answered recived for question"{label_org}" \nhere is answer : "{answer}"')
+                            if ai_provider.lower() == "openai":
+                                answer = ai_answer_question(aiClient, label_org, question_type="textarea", job_description=job_description, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "deepseek":
+                                answer = deepseek_answer_question(aiClient, label_org, options=None, question_type="textarea", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            elif ai_provider.lower() == "gemini":
+                                answer = gemini_answer_question(aiClient, label_org, options=None, question_type="textarea", job_description=job_description, about_company=None, user_information_all=user_information_all)
+                            else:
+                                randomly_answered_questions.add((label_org, "textarea"))
+                                answer = ""
+                            if answer and isinstance(answer, str) and len(answer) > 0:
+                                print_lg(f'AI Answered received for question "{label_org}" \nhere is answer: "{answer}"')
+                            else:
+                                randomly_answered_questions.add((label_org, "textarea"))
+                                answer = ""
                         except Exception as e:
                             print_lg("Failed to get AI answer!", e)
+                            randomly_answered_questions.add((label_org, "textarea"))
+                            answer = ""
                     else:
                         randomly_answered_questions.add((label_org, "textarea"))
             text_area.clear()
@@ -762,7 +796,7 @@ def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str,
             fieldnames = ['Job ID', 'Job Link', 'Resume Tried', 'Date listed', 'Date Tried', 'Assumed Reason', 'Stack Trace', 'External Job link', 'Screenshot Name']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             if file.tell() == 0: writer.writeheader()
-            writer.writerow({'Job ID':job_id, 'Job Link':job_link, 'Resume Tried':resume, 'Date listed':date_listed, 'Date Tried':datetime.now(), 'Assumed Reason':error, 'Stack Trace':exception, 'External Job link':application_link, 'Screenshot Name':screenshot_name})
+            writer.writerow({'Job ID':truncate_for_csv(job_id), 'Job Link':truncate_for_csv(job_link), 'Resume Tried':truncate_for_csv(resume), 'Date listed':truncate_for_csv(date_listed), 'Date Tried':datetime.now(), 'Assumed Reason':truncate_for_csv(error), 'Stack Trace':truncate_for_csv(exception), 'External Job link':truncate_for_csv(application_link), 'Screenshot Name':truncate_for_csv(screenshot_name)})
             file.close()
     except Exception as e:
         print_lg("Failed to update failed jobs list!", e)
@@ -796,11 +830,11 @@ def submitted_jobs(job_id: str, title: str, company: str, work_location: str, wo
             fieldnames = ['Job ID', 'Title', 'Company', 'Work Location', 'Work Style', 'About Job', 'Experience required', 'Skills required', 'HR Name', 'HR Link', 'Resume', 'Re-posted', 'Date Posted', 'Date Applied', 'Job Link', 'External Job link', 'Questions Found', 'Connect Request']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             if csv_file.tell() == 0: writer.writeheader()
-            writer.writerow({'Job ID':job_id, 'Title':title, 'Company':company, 'Work Location':work_location, 'Work Style':work_style, 
-                            'About Job':description, 'Experience required': experience_required, 'Skills required':skills, 
-                                'HR Name':hr_name, 'HR Link':hr_link, 'Resume':resume, 'Re-posted':reposted, 
-                                'Date Posted':date_listed, 'Date Applied':date_applied, 'Job Link':job_link, 
-                                'External Job link':application_link, 'Questions Found':questions_list, 'Connect Request':connect_request})
+            writer.writerow({'Job ID':truncate_for_csv(job_id), 'Title':truncate_for_csv(title), 'Company':truncate_for_csv(company), 'Work Location':truncate_for_csv(work_location), 'Work Style':truncate_for_csv(work_style), 
+                            'About Job':truncate_for_csv(description), 'Experience required': truncate_for_csv(experience_required), 'Skills required':truncate_for_csv(skills), 
+                                'HR Name':truncate_for_csv(hr_name), 'HR Link':truncate_for_csv(hr_link), 'Resume':truncate_for_csv(resume), 'Re-posted':truncate_for_csv(reposted), 
+                                'Date Posted':truncate_for_csv(date_listed), 'Date Applied':truncate_for_csv(date_applied), 'Job Link':truncate_for_csv(job_link), 
+                                'External Job link':truncate_for_csv(application_link), 'Questions Found':truncate_for_csv(questions_list), 'Connect Request':truncate_for_csv(connect_request)})
         csv_file.close()
     except Exception as e:
         print_lg("Failed to update submitted jobs list!", e)
@@ -924,7 +958,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                         if time_posted_text.__contains__("Reposted"):
                             reposted = True
                             time_posted_text = time_posted_text.replace("Reposted", "")
-                        date_listed = calculate_date_posted(time_posted_text)
+                        date_listed = calculate_date_posted(time_posted_text.strip())
                     except Exception as e:
                         print_lg("Failed to calculate the date posted!",e)
 
@@ -939,7 +973,21 @@ def apply_to_jobs(search_terms: list[str]) -> None:
 
                     
                     if use_AI and description != "Unknown":
-                        skills = ai_extract_skills(aiClient, description)
+                        ##> ------ Yang Li : MARKYangL - Feature ------
+                        try:
+                            if ai_provider.lower() == "openai":
+                                skills = ai_extract_skills(aiClient, description)
+                            elif ai_provider.lower() == "deepseek":
+                                skills = deepseek_extract_skills(aiClient, description)
+                            elif ai_provider.lower() == "gemini":
+                                skills = gemini_extract_skills(aiClient, description)
+                            else:
+                                skills = "In Development"
+                            print_lg(f"Extracted skills using {ai_provider} AI")
+                        except Exception as e:
+                            print_lg("Failed to extract skills:", e)
+                            skills = "Error extracting skills"
+                        ##<
 
                     uploaded = False
                     # Case 1: Easy Apply Button
@@ -1039,10 +1087,16 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     print_lg(f"\n>-> Didn't find Page {current_page+1}. Probably at the end page of results!\n")
                     break
 
+        except (NoSuchWindowException, WebDriverException) as e:
+            print_lg("Browser window closed or session is invalid. Ending application process.", e)
+            raise e # Re-raise to be caught by main
         except Exception as e:
             print_lg("Failed to find Job listings!")
             critical_error_log("In Applier", e)
-            print_lg(driver.page_source, pretty=True)
+            try:
+                print_lg(driver.page_source, pretty=True)
+            except Exception as page_source_error:
+                print_lg(f"Failed to get page source, browser might have crashed. {page_source_error}")
             # print_lg(e)
 
         
@@ -1098,8 +1152,22 @@ def main() -> None:
         #     except Exception as e:
         #         print_lg("Opening OpenAI chatGPT tab failed!")
         if use_AI:
-            aiClient = ai_create_openai_client()
+            if ai_provider == "openai":
+                aiClient = ai_create_openai_client()
+            ##> ------ Yang Li : MARKYangL - Feature ------
+            # Create DeepSeek client
+            elif ai_provider == "deepseek":
+                aiClient = deepseek_create_client()
+            elif ai_provider == "gemini":
+                aiClient = gemini_create_client()
+            ##<
 
+            try:
+                about_company_for_ai = " ".join([word for word in (first_name+" "+last_name).split() if len(word) > 3])
+                print_lg(f"Extracted about company info for AI: '{about_company_for_ai}'")
+            except Exception as e:
+                print_lg("Failed to extract about company info!", e)
+        
         # Start applying to jobs
         driver.switch_to.window(linkedIn_tab)
         total_runs = run(total_runs)
@@ -1118,7 +1186,8 @@ def main() -> None:
                 break
         
 
-    except NoSuchWindowException:   pass
+    except (NoSuchWindowException, WebDriverException) as e:
+        print_lg("Browser window closed or session is invalid. Exiting.", e)
     except Exception as e:
         critical_error_log("In Applier Main", e)
         pyautogui.alert(e,alert_title)
@@ -1152,9 +1221,26 @@ def main() -> None:
             msg = "NOTE: IF YOU HAVE MORE THAN 10 TABS OPENED, PLEASE CLOSE OR BOOKMARK THEM!\n\nOr it's highly likely that application will just open browser and not do anything next time!" 
             pyautogui.alert(msg,"Info")
             print_lg("\n"+msg)
-        ai_close_openai_client(aiClient)
-        try: driver.quit()
-        except Exception as e: critical_error_log("When quitting...", e)
+        ##> ------ Yang Li : MARKYangL - Feature ------
+        if use_AI and aiClient:
+            try:
+                if ai_provider.lower() == "openai":
+                    ai_close_openai_client(aiClient)
+                elif ai_provider.lower() == "deepseek":
+                    ai_close_openai_client(aiClient)
+                elif ai_provider.lower() == "gemini":
+                    pass # Gemini client does not need to be closed
+                print_lg(f"Closed {ai_provider} AI client.")
+            except Exception as e:
+                print_lg("Failed to close AI client:", e)
+        ##<
+        try:
+            if driver:
+                driver.quit()
+        except WebDriverException as e:
+            print_lg("Browser already closed.", e)
+        except Exception as e: 
+            critical_error_log("When quitting...", e)
 
 
 if __name__ == "__main__":

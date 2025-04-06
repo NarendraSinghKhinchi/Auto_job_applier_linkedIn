@@ -35,26 +35,40 @@ Note: Set it as True only if you want to use AI, and If you either have a
 CHECK THE OPENAI API PIRCES AT THEIR WEBSITE (https://openai.com/api/pricing/). 
 '''
 
-# Your Local LLM url or other AI api url and port
-llm_api_url = "https://api.openai.com/v1/"       # Examples: "https://api.openai.com/v1/", "http://127.0.0.1:1234/v1/", "http://localhost:1234/v1/"
+##> ------ Yang Li : MARKYangL - Feature ------
+##> ------ Tim L : tulxoro - Refactor ------
+# Select AI Provider
+ai_provider = "openai"               # "openai", "deepseek", "gemini"
 '''
-Note: Don't forget to add / at the end of your url
+Note: Select your AI provider.
+* "openai" - OpenAI API (GPT models) OR OpenAi-compatible APIs (like Ollama)
+* "deepseek" - DeepSeek API (DeepSeek models)
+* "gemini" - Google Gemini API (Gemini models)
+* For any other models, keep it as "openai" if it is compatible with OpenAI's api.
 '''
 
-# Your Local LLM API key or other AI API key 
-llm_api_key = "ojjnawuogjuio;ewhfuioweh*********"              # Enter your API key in the quotes, make sure it's valid, if not will result in error.
+
+
+# Your LLM url or other AI api url and port
+llm_api_url = "https://api.openai.com/v1/"       # Examples: "https://api.openai.com/v1/", "http://127.0.0.1:1234/v1/", "http://localhost:1234/v1/", "https://api.deepseek.com", "https://api.deepseek.com/v1"
 '''
-Note: Leave it empyt as "" or "not-needed" if not needed. Else will result in error!
+Note: Don't forget to add / at the end of your url. You may not need this if you are using Gemini.
 '''
 
-# Your local LLM model name or other AI model name
-llm_model = "gpt-4o-mini"          # Examples: "gpt-3.5-turbo", "gpt-4o", "llama-3.2-3b-instruct"
+# Your LLM API key or other AI API key 
+llm_api_key = "not-needed"              # Enter your API key in the quotes, make sure it's valid, if not will result in error.
+'''
+Note: Leave it empty as "" or "not-needed" if not needed. Else will result in error!
+If you are using ollama, you MUST put "not-needed".
+'''
 
+# Your LLM model name or other AI model name
+llm_model = "gpt-5-mini"          # Examples: "gpt-3.5-turbo", "gpt-4o", "llama-3.2-3b-instruct", "qwen3:latest", "gemini-pro", "gemini-1.5-flash", "gemini-2.5-flash", "deepseek-llm:latest"
 
-#
 llm_spec = "openai"                # Examples: "openai", "openai-like", "openai-like-github", "openai-like-mistral"
 '''
-Note: Currently "openai" and "openai-like" api endpoints are supported.
+Note: Currently "openai", "deepseek", "gemini" and "openai-like" api endpoints are supported.
+Most LLMs are compatible with openai, so keeping it as "openai-like" will work.
 '''
 
 # # Yor local embedding model name or other AI Embedding model name

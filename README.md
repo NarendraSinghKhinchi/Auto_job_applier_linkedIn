@@ -52,6 +52,7 @@ Click on above image to watch the demo or use this link https://youtu.be/gMbB1fW
 5. Open `settings.py` file in `/config` folder to configure the bot settings like, keep screen awake, click intervals (click intervals are randomized to seem like human behavior), run in background, stealth mode (to avoid bot detection), etc. as per your needs.
 6. (Optional) Don't forget to add you default resume in the location you mentioned in `default_resume_path = "all resumes/default/resume.pdf"` given in `/config/questions.py`. If one is not provided, it will use your previous resume submitted in LinkedIn or (In Development) generate custom resume if OpenAI APT key is provided!
 7. Run `runAiBot.py` and see the magic happen.
+8. To run the Applied Jobs history UI, run `app.py` and open web browser on `http://localhost:5000`.
 8. If you have questions or need help setting it up or to talk in general, join the github server: https://discord.gg/fFp7uUzWCY
 
 [back to index](#-content)
@@ -225,6 +226,7 @@ Once your code is tested, your changes will be merged to the `main` branch in ne
 - Auto collects a looooooooooooooooooot of info about your jobs, check applied-jobs.excel and failed_jobs.excel for info after each run.
 - Optional pause before submit application.
 - Optional pause if stuck at a question.
+- UI to manage easy applied jobs and external links.
 
 
 
@@ -288,6 +290,10 @@ With heartfelt appreciation, <br>
 <br>
 
 ## 🗓️ Major Updates History:
+### Jul 20, 2024
+- Contributions from community have been added
+- Better AI support, minor bug fixes
+
 ### Nov 28, 2024
 - Patched to work for latest changes in Linkedin.
 - Users can now select to follow or not follow companies when submitting application.
@@ -392,7 +398,7 @@ See [AGPLv3 LICENSE](LICENSE) for more info.
 ## 🐧 Socials
 - **LinkedIn** : https://www.linkedin.com/in/saivigneshgolla/
 - **Email**    : saivigneshgolla@outlook.com
-- **X/Twitter**: https://x.com/gods_scion
+- **X/Twitter**: https://x.com/saivigneshgolla
 - **Discord**  : godsscion
 
 
@@ -409,7 +415,7 @@ alternate link: https://discord.gg/ykfDjRFB
     - [Support Q&A](https://github.com/GodsScion/Auto_job_applier_linkedIn/discussions/categories/support-q-a)
 
 
-#### ℹ️ Version: 24.12.29.12.30 Stable Preview
+#### ℹ️ Version: 25.07.20.9.30 Community Alpha
 
 ---
 
