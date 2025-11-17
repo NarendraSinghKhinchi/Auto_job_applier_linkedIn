@@ -9,7 +9,9 @@ License:    GNU Affero General Public License
             
 GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 
-version:    24.12.29.12.30
+Support me: https://github.com/sponsors/GodsScion
+
+version:    26.01.20.5.08
 '''
 
 
@@ -53,6 +55,16 @@ def make_directories(paths: list[str]) -> None:
                 os.makedirs(path, exist_ok=True) # exist_ok=True avoids race condition
         except Exception as e:
             print(f'Error while creating directory "{path}": ', e)
+
+
+def get_default_temp_profile() -> str:
+    # Thanks to https://github.com/vinodbavage31 for suggestion!
+    home = pathlib.Path.home()
+    if sys.platform.startswith('win'):
+        return "--user-data-dir=C:\\temp\\auto-job-apply-profile"
+    elif sys.platform.startswith('linux'):
+        return str(home / ".auto-job-apply-profile")
+    return str(home / "Library" / "Application Support" / "Google" / "Chrome" / "auto-job-apply-profile")
 
 
 def find_default_profile_directory() -> str | None:
