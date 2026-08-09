@@ -2,10 +2,10 @@
 Author:     Sai Vignesh Golla
 LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
 
-Copyright (C) 2024 Sai Vignesh Golla
+Copyright (c) 2024-2026 Sai Vignesh Golla
 
-License:    GNU Affero General Public License
-            https://www.gnu.org/licenses/agpl-3.0.en.html
+License:    MIT License
+            https://opensource.org/license/mit
             
 GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 
@@ -34,6 +34,10 @@ website = "https://github.com/GodsScion"                        # "www.example.b
 
 # Please provide the link to your LinkedIn profile.
 linkedIn = "https://www.linkedin.com/in/saivigneshgolla/"       # "https://www.linkedin.com/in/example" or "" and so on...
+
+# Do you ALREADY have permission to work in the country you are applying to? (Eg: citizen, permanent resident, or a valid work visa such as H-1B or OPT)
+# This is NOT `require_visa`, which asks whether you need sponsorship. Someone on a valid work visa answers "Yes" to both.
+legally_authorized = "Yes"         # "Yes" or "No"
 
 # What is the status of your citizenship? # If left empty as "", tool will not answer the question. However, note that some companies make it compulsory to be answered
 # Valid options are: "U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident" or "Other"
@@ -100,14 +104,12 @@ Note: If left empty as "", the tool will not answer the question. However, note 
 cover_letter = """
 Cover Letter
 """
-##> ------ Dheeraj Deshwal : dheeraj9811 Email:dheeraj20194@iiitd.ac.in/dheerajdeshwal9811@gmail.com - Feature ------
-
-# Your user_information_all letter in quotes, use \n to add line breaks if using single quotes "user_information_all".You can skip \n if using triple quotes """user_information_all""" (This question makes sense though)
-# We use this to pass to AI to generate answer from information , Assuing Information contians eg: resume  all the information like name, experience, skills, Country, any illness etc. 
-user_information_all ="""
+# Information about you that the AI can use when answering application questions.
+# Put anything an answer might need here, for example: name, years of experience,
+# key skills, location, work authorization, and so on. Use \n for line breaks.
+user_information_all = """
 User Information
 """
-##<
 '''
 Note: If left empty as "", the tool will not answer the question. However, note that some companies make it compulsory to be answered. Use \n to add line breaks.
 ''' 
@@ -162,4 +164,9 @@ Your support, whether through donations big or small or simply spreading the wor
 Gratefully yours 🙏🏻,
 Sai Vignesh Golla
 '''
+
+# --- Load user settings saved by the local control panel (user_config.json).
+# --- No-op if that file is absent: values fall back to the defaults above.
+from config import _overrides as _o
+_o.apply(__name__, globals())
 ############################################################################################################

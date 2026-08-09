@@ -2,10 +2,10 @@
 Author:     Sai Vignesh Golla
 LinkedIn:   https://www.linkedin.com/in/saivigneshgolla/
 
-Copyright (C) 2024 Sai Vignesh Golla
+Copyright (c) 2024-2026 Sai Vignesh Golla
 
-License:    GNU Affero General Public License
-            https://www.gnu.org/licenses/agpl-3.0.en.html
+License:    MIT License
+            https://opensource.org/license/mit
             
 GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 
@@ -94,6 +94,32 @@ about_company_good_words = []      # (dynamic multiple search) or leave empty as
 bad_words = ["US Citizen","USA Citizen","No C2C", "No Corp2Corp", ".NET", "Embedded Programming", "PHP", "Ruby", "CNC"]                     # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
 
 # Do you have an active Security Clearance? (True for Yes and False for No)
+# Skip jobs whose description says visa sponsorship is NOT available?
+# ONLY does anything when config/questions.py has require_visa = "Yes". If you don't need
+# sponsorship this setting is completely inert - no cost, no change in behaviour.
+skip_non_sponsoring_jobs = False   # True or False, Note: True or False are case-sensitive
+
+# Phrases that mean "we DO sponsor". Checked FIRST, and an offer always wins: real postings
+# say both, e.g. "we do not require you to have sponsorship... we will sponsor H-1B transfers".
+sponsorship_offered_phrases = ["visa sponsorship available", "sponsorship available", "sponsorship is available", "we sponsor", "we do sponsor", "will sponsor", "open to sponsorship", "h-1b transfer", "h1b transfer", "cap-exempt", "cap exempt"]     # (dynamic multiple search) Case Insensitive.
+
+# Phrases that mean "we do NOT sponsor". Matched as whole phrases like `bad_words`, never as
+# substrings, so "sponsorship of our annual conference" and "sponsored content" are safe.
+# A description that says nothing about sponsorship is applied to - silence is not a refusal.
+sponsorship_unavailable_phrases = ["will not sponsor", "do not sponsor", "does not sponsor", "cannot sponsor", "unable to sponsor", "not able to sponsor", "not offer sponsorship", "not provide sponsorship", "does not provide immigration", "no visa sponsorship", "without sponsorship", "without the need for sponsorship", "sponsorship not available", "sponsorship is not available", "not eligible for visa sponsorship", "must be a us citizen", "must be a u.s. citizen"]     # (dynamic multiple search) Case Insensitive.
+
+
+# STRICT MODE: also skip jobs whose description says NOTHING about sponsorship either way?
+# Only does anything when require_visa = "Yes" AND skip_non_sponsoring_jobs = True.
+# True  = apply only where sponsorship is affirmatively offered. Most postings never mention
+#         sponsorship at all, so this skips a LOT of jobs, including many employers who would
+#         in fact have sponsored you. Silence is not a refusal.
+# False = (default) silence is treated as "maybe", and the job is applied to.
+# Why anyone would turn it on: LinkedIn caps Easy Apply at roughly 25 applications a day, so
+# applications are a rationed daily resource. If your runs end on the daily limit, a slot
+# spent on a silent posting is a slot denied to one that says "we sponsor". If your runs
+# never hit the cap, leave this off - every skip is then pure loss.
+skip_jobs_without_sponsorship = False   # True or False, Note: True or False are case-sensitive
 security_clearance = False         # True or False, Note: True or False are case-sensitive
 
 # Do you have a Masters degree? (True for Yes and False for No). If True, the tool will apply to jobs containing the word 'master' in their job description and if it's experience required <= current_experience + 2 and current_experience is not set as -1. 
@@ -123,4 +149,9 @@ Your support, whether through donations big or small or simply spreading the wor
 Gratefully yours 🙏🏻,
 Sai Vignesh Golla
 '''
+
+# --- Load user settings saved by the local control panel (user_config.json).
+# --- No-op if that file is absent: values fall back to the defaults above.
+from config import _overrides as _o
+_o.apply(__name__, globals())
 ############################################################################################################
