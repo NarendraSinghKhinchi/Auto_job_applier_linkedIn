@@ -56,7 +56,7 @@ def wait_for_displayed(driver: WebDriver, xpath: str, time: float) -> WebElement
 # Click Functions
 def wait_span_click(driver: WebDriver, text: str, time: float=5.0, click: bool=True, scroll: bool=True, scrollTop: bool=False) -> WebElement | bool:
     '''
-    Finds the span element with the given `text`.
+    Finds a visible clickable filter element with the given `text`.
     - Returns `WebElement` if found, else `False` if not found.
     - Clicks on it if `click = True`.
     - Will spend a max of `time` seconds in searching for each element.
@@ -65,7 +65,15 @@ def wait_span_click(driver: WebDriver, text: str, time: float=5.0, click: bool=T
     '''
     if text:
         try:
-            button = wait_for_displayed(driver, text_xpath("span", text), time)
+            # LinkedIn has used span, button, and label nodes for the same filter
+            # options across dialog revisions.
+            locator = (
+                '//*[self::span or self::button or self::label]'
+                '[contains(translate(normalize-space(.), '
+                '"ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), '
+                f'"{text.strip().lower()}")]'
+            )
+            button = wait_for_displayed(driver, locator, time)
             if scroll:  scroll_to_view(driver, button, scrollTop)
             if click:
                 button.click()

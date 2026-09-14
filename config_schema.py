@@ -43,6 +43,8 @@ Field types:
     list      - comma-separated text in the UI, stored as a JSON list
 '''
 
+from config import _overrides
+
 
 # Suggested model names per provider. These are only suggestions shown in a
 # dropdown; any model name can still be typed in, since providers add and rename
@@ -292,6 +294,36 @@ def valid_keys():
     keys.
     '''
     mapping = {}
-    for field in iter_fields():
-        mapping.setdefault(field["config_module"], {})[field["key"]] = field
+    for section in get_schema():
+        for field in section["fields"]:
+            mapping.setdefault(field["config_module"], {})[field["key"]] = field
     return mapping
+
+
+def learned_schema():
+    '''Return a UI section for questions discovered during previous runs.'''
+    fields = []
+    for key, question in _overrides.load_learned_questions().items():
+        label = str(question.get("label", "Unknown question"))
+        options = question.get("options", [])
+        if not isinstance(options, list):
+            options = []
+        options = [str(option) for option in options]
+        field_type = "select" if options else str(question.get("type", "text"))
+        if field_type not in ("text", "textarea"):
+            field_type = "text"
+        fields.append(_f(
+            "Learned answers",
+            "learned_answers",
+            key,
+            label,
+            field_type,
+            "This question was found during a run. Choose the answer to reuse automatically.",
+            options=[""] + options if options else None,
+        ))
+    return [{"section": "Learned answers", "fields": fields}] if fields else []
+
+
+def get_schema():
+    '''Return built-in settings plus questions discovered during runs.'''
+    return SCHEMA + learned_schema()

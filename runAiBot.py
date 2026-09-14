@@ -41,6 +41,7 @@ from config.questions import *
 from config.search import *
 from config.secrets import use_AI, username, password, ai_provider
 from config.settings import *
+from config import _overrides
 
 from modules.open_chrome import *
 from modules.helpers import *
@@ -313,7 +314,13 @@ def apply_filters() -> None:
         multi_sel_noWait(driver, commitments)
         if benefits or commitments: buffer(recommended_wait)
 
-        show_results_button: WebElement = wait.until(EC.element_to_be_clickable((By.XPATH, '//button[contains(translate(@aria-label, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "apply current filters to show")]')))
+        show_results_button: WebElement = wait.until(EC.element_to_be_clickable((
+            By.XPATH,
+            '//button['
+            'contains(translate(@aria-label, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "apply current filters to show") '
+            'or contains(translate(normalize-space(.), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "show results")'
+            ']'
+        )))
         show_results_button.click()
         buffer(3)   # let the results reload settle before anything reads the list
 
@@ -323,7 +330,13 @@ def apply_filters() -> None:
 
     except Exception as e:
         logger.warning("Setting the preferences failed!")
-        pyautogui.confirm(f"Faced error while applying filters. Please make sure correct filters are selected, click on show results and click on any button of this dialog, I know it sucks. Can't turn off Pause after search when error occurs! ERROR: {e}", ["Doesn't look good, but Continue XD", "Look's good, Continue"])
+        pyautogui.confirm(
+            f"Faced error while applying filters. Please make sure correct filters are selected, "
+            f"click on show results and click on any button of this dialog, I know it sucks. "
+            f"Can't turn off Pause after search when error occurs! ERROR: {e}",
+            "Filter setup failed",
+            ["Doesn't look good, but Continue XD", "Look's good, Continue"],
+        )
         # print_lg(e)
 
 
@@ -707,8 +720,11 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 # Whole words only, and work authorization first: "Are you currently legally
                 # authorized to work in the United States?" contains "state" and used to be
                 # answered with the state of residence.
+                learned = _overrides.learned_answer(label_org, optionsText)
                 auth_answer = work_authorization_answer(label)
-                if auth_answer is not None:
+                if learned and (not prev_answer or overwrite_previous_answers):
+                    answer = learned
+                elif auth_answer is not None:
                     answer = auth_answer
                 elif label_has(label, 'email', 'phone'):
                     answer = prev_answer
@@ -743,6 +759,10 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         # dropdown alone so LinkedIn blocks Next and the failed-question path
                         # (pause_at_failed_question, else a failed application) takes over.
                         print_lg(f'No option matched "{answer or "a configured answer"}" for "{label_org}". Leaving it unanswered instead of guessing.')
+                        try:
+                            _overrides.record_learned_question(label_org, optionsText)
+                        except OSError as error:
+                            logger.warning("Could not save learned question %r: %s", label_org, error)
                         answer = prev_answer
                         randomly_answered_questions.add((f'{label_org} [ {options} ]', "select"))
                         unanswered_questions.add(f'{label_org} [ {options} ]')
@@ -891,8 +911,16 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         # user's total years of experience - wrong data on a real
                         # application. Report it and let the stall guard skip the job.
                         print_lg(f'No answer for the text question "{label_org}". Leaving it empty - add it to config/questions.py.')
+                        try:
+                            _overrides.record_learned_question(label_org, [], "text")
+                        except OSError as error:
+                            logger.warning("Could not save learned text question %r: %s", label_org, error)
                         randomly_answered_questions.add((label_org, "text"))
                         unanswered_questions.add(label_org)
+                learned = _overrides.learned_answer(label_org, [])
+                if learned and (not prev_answer or overwrite_previous_answers):
+                    answer = learned
+                    print_lg(f'Using learned answer for "{label_org}".')
                 text.clear()
                 human_type(text, answer)
                 if do_actions:
@@ -924,8 +952,21 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         answer = ai_answer.strip()
                         print_lg(f'AI answered "{label_org}": "{answer}"')
                     else:
-                        randomly_answered_questions.add((label_org, "textarea"))
-                        unanswered_questions.add(label_org)
+                        learned = _overrides.learned_answer(label_org, [])
+                        if learned:
+                            answer = learned
+                            print_lg(f'Using learned answer for "{label_org}".')
+                        else:
+                            try:
+                                _overrides.record_learned_question(label_org, [], "textarea")
+                            except OSError as error:
+                                logger.warning("Could not save learned text question %r: %s", label_org, error)
+                            randomly_answered_questions.add((label_org, "textarea"))
+                            unanswered_questions.add(label_org)
+            learned = _overrides.learned_answer(label_org, [])
+            if learned:
+                answer = learned
+                print_lg(f'Using learned answer for "{label_org}".')
             text_area.clear()
             human_type(text_area, answer)
             questions_list.add((label, text_area.get_attribute("value"), "textarea", prev_answer))

@@ -108,6 +108,9 @@ def _effective_config() -> dict:
         section = user.get(module_name)
         if isinstance(section, dict) and key in section:
             effective[module_name][key] = section[key]
+    learned = user.get("learned_answers")
+    if isinstance(learned, dict):
+        effective["learned_answers"] = learned
     return effective
 
 
@@ -331,7 +334,7 @@ def mark_job_applied(job_id):
 @app.route('/api/schema', methods=['GET'])
 def api_schema():
     '''Returns the field schema the UI renders its forms from.'''
-    return jsonify(config_schema.SCHEMA)
+    return jsonify(config_schema.get_schema())
 
 
 @app.route('/api/config', methods=['GET'])
